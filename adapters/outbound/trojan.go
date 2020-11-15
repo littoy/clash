@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/Dreamacro/clash/component/dialer"
 	"github.com/Dreamacro/clash/component/trojan"
 	C "github.com/Dreamacro/clash/constant"
+	xtls "github.com/xtls/go"
 )
 
 type Trojan struct {
@@ -22,6 +24,7 @@ type TrojanOption struct {
 	Server         string   `proxy:"server"`
 	Port           int      `proxy:"port"`
 	Password       string   `proxy:"password"`
+	Flow           string   `proxy:"flow,omitempty"`
 	ALPN           []string `proxy:"alpn,omitempty"`
 	SNI            string   `proxy:"sni,omitempty"`
 	SkipCertVerify bool     `proxy:"skip-cert-verify,omitempty"`
@@ -34,7 +37,19 @@ func (t *Trojan) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) 
 		return nil, fmt.Errorf("%s connect error: %w", t.addr, err)
 	}
 
-	err = t.instance.WriteHeader(c, trojan.CommandTCP, serializesSocksAddr(metadata))
+	var tc trojan.Command
+	if xtlsConn, ok := c.(*xtls.Conn); ok {
+		xtlsConn.RPRX = true
+		if strings.HasPrefix(t.instance.GetFlow(), trojan.XRD) {
+			xtlsConn.DirectMode = true
+			tc = trojan.CommandXRD
+		} else {
+			tc = trojan.CommandXRO
+		}
+	} else {
+		tc = trojan.CommandTCP
+	}
+	err = t.instance.WriteHeader(c, tc, serializesSocksAddr(metadata))
 	return c, err
 }
 
@@ -53,6 +68,9 @@ func (t *Trojan) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn,
 }
 
 func (t *Trojan) DialUDP(metadata *C.Metadata) (C.PacketConn, error) {
+	if !strings.HasSuffix(t.instance.GetFlow(), "-udp443") && metadata.DstPort == "443" {
+		return nil, fmt.Errorf("%s stopped UDP/443", t.instance.GetFlow())
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), tcpTimeout)
 	defer cancel()
 	c, err := dialer.DialContext(ctx, "tcp", t.addr)
@@ -84,11 +102,13 @@ func NewTrojan(option TrojanOption) (*Trojan, error) {
 	addr := net.JoinHostPort(option.Server, strconv.Itoa(option.Port))
 
 	tOption := &trojan.Option{
-		Password:           option.Password,
-		ALPN:               option.ALPN,
-		ServerName:         option.Server,
-		SkipCertVerify:     option.SkipCertVerify,
-		ClientSessionCache: getClientSessionCache(),
+		Password:            option.Password,
+		Flow:                option.Flow,
+		ALPN:                option.ALPN,
+		ServerName:          option.Server,
+		SkipCertVerify:      option.SkipCertVerify,
+		ClientSessionCache:  getClientSessionCache(),
+		ClientXSessionCache: getClientXSessionCache(),
 	}
 
 	if option.SNI != "" {
