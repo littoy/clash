@@ -66,7 +66,7 @@ func (t *Trojan) StreamConn(conn net.Conn) (net.Conn, error) {
 	}
 
 	switch t.option.Flow {
-	case XRO, XRD, XRO + "-udp443", XRD + "-udp443":
+	case XRD, XRO, XRD + "-udp443", XRO + "-udp443":
 		xtlsConfig := &xtls.Config{
 			NextProtos:         alpn,
 			MinVersion:         xtls.VersionTLS12,

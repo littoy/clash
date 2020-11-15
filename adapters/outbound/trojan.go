@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	"strings"
 
 	"github.com/Dreamacro/clash/component/dialer"
 	"github.com/Dreamacro/clash/component/trojan"
@@ -40,7 +39,7 @@ func (t *Trojan) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) 
 	var tc trojan.Command
 	if xtlsConn, ok := c.(*xtls.Conn); ok {
 		xtlsConn.RPRX = true
-		if strings.HasPrefix(t.instance.GetFlow(), trojan.XRD) {
+		if t.instance.GetFlow() == trojan.XRD || t.instance.GetFlow() == trojan.XRD+"-udp443" {
 			xtlsConn.DirectMode = true
 			tc = trojan.CommandXRD
 		} else {
@@ -68,7 +67,7 @@ func (t *Trojan) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn,
 }
 
 func (t *Trojan) DialUDP(metadata *C.Metadata) (C.PacketConn, error) {
-	if !strings.HasSuffix(t.instance.GetFlow(), "-udp443") && metadata.DstPort == "443" {
+	if (t.instance.GetFlow() == trojan.XRD || t.instance.GetFlow() == trojan.XRO) && metadata.DstPort == "443" {
 		return nil, fmt.Errorf("%s stopped UDP/443", t.instance.GetFlow())
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), tcpTimeout)
