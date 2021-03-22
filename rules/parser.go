@@ -19,6 +19,9 @@ func ParseRule(tp, payload, target string, params []string) (C.Rule, error) {
 		parsed = NewDomainSuffix(payload, target)
 	case "DOMAIN-KEYWORD":
 		parsed = NewDomainKeyword(payload, target)
+	case "GEOSITE":
+		noResolve := HasNoResolve(params)
+		parsed = NewGEOSITE(payload, target, noResolve)
 	case "GEOIP":
 		noResolve := HasNoResolve(params)
 		parsed = NewGEOIP(payload, target, noResolve)
