@@ -4,7 +4,7 @@ package route
 import (
 	//"strings"
 
-	"github.com/yaling888/clash/common/strmatcher"
+	"github.com/Dreamacro/clash/common/strmatcher"
 )
 
 var matcherTypeMap = map[Domain_Type]strmatcher.Type{
