@@ -1,4 +1,4 @@
-package router
+package route
 
 import (
 	proto "github.com/golang/protobuf/proto"
