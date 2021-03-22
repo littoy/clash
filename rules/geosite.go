@@ -16,6 +16,13 @@ func (g *GEOSITE) RuleType() C.RuleType {
 }
 
 func (g *GEOSITE) Match(metadata *C.Metadata) bool {
+	if metadata.AddrType != C.AtypDomainName {
+		return false
+	}
+	domain := metadata.Host
+	
+	
+	return strings.HasSuffix(domain, "."+ds.suffix) || domain == ds.suffix
 	ip := metadata.DstIP
 	if ip == nil {
 		return false
