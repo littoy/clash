@@ -6,9 +6,9 @@ import (
 	"runtime"
 	"strings"
 	
-	C "github.com/yaling888/clash/constant"
+	C "github.com/Dreamacro/clash/constant"
 	
-	router "github.com/yaling888/clash/hub/route"
+	router "github.com/Dreamacro/clash/hub/route"
 	
 	"github.com/golang/protobuf/proto"
 
