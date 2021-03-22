@@ -1,10 +1,11 @@
 name: Publish Docker Image
-on:
-  push:
-    branches:
-      - dev
-    tags:
-      - '*'
+#on:
+#  push:
+#    branches:
+#      - dev
+#    tags:
+#      - '*'
+on: [repository_dispatch, workflow_dispatch]
 jobs:
 
   build:
