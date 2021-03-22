@@ -60,3 +60,7 @@ func (p *path) MMDB() string {
 func (p *path) Cache() string {
 	return P.Join(p.homeDir, ".cache")
 }
+
+func (p *path) GeoSite() string {
+	return P.Join(p.homeDir, "geosite.dat")
+}
