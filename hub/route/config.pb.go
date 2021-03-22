@@ -85,7 +85,7 @@ type Domain struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Domain matching type.
-	Type Domain_Type `protobuf:"varint,1,opt,name=type,proto3,enum=xray.app.router.Domain_Type" json:"type,omitempty"`
+	Type Domain_Type `protobuf:"varint,1,opt,name=type,proto3,enum=clash.hub.route.Domain_Type" json:"type,omitempty"`
 	// Domain value.
 	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	// Attributes of this domain. May be used for filtering.
