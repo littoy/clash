@@ -3,11 +3,12 @@ package rules
 import (
 	"io"
 	"os"
+	"runtime"
+	"strings"
 	
-	"github.com/Dreamacro/clash/component/mmdb"
-	C "github.com/Dreamacro/clash/constant"
+	C "github.com/yaling888/clash/constant"
 	
-	router "github.com/xtls/xray-core/app/router"
+	router "github.com/yaling888/clash/hub/route"
 	
 	"github.com/golang/protobuf/proto"
 
