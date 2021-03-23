@@ -23,7 +23,7 @@ func domainToMatcher(domain *Domain) (strmatcher.Matcher, error) {
 
 	matcher, err := matcherType.New(domain.Value)
 	if err != nil {
-		return nil, errors.New("failed to create domain matcher").Base(err)
+		return nil, errors.New("failed to create domain matcher")
 	}
 
 	return matcher, nil
