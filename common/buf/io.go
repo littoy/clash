@@ -6,6 +6,7 @@ import (
 	"os"
 	"syscall"
 	"time"
+	"errors"
 )
 
 // Reader extends io.Reader with MultiBuffer.
@@ -15,7 +16,7 @@ type Reader interface {
 }
 
 // ErrReadTimeout is an error that happens with IO timeout.
-var ErrReadTimeout = newError("IO timeout")
+var ErrReadTimeout = errors.New("IO timeout")
 
 // TimeoutReader is a reader that returns error if Read() operation takes longer than the given timeout.
 type TimeoutReader interface {
