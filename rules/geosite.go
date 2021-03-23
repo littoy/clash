@@ -3,6 +3,7 @@ package rules
 import (
 	//"errors"
 	"time"
+	"runtime"
 
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/log"
@@ -48,6 +49,7 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 			return false
 		}
 		
+		defer runtime.GC()
 		DomainMatcherCache[country] = &matcher
 	} else {
 		matcher := DomainMatcherCache[country]
@@ -57,7 +59,7 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	
 	elapsed := time.Since(start)
 	
-	log.Infoln("列表类型%d，域名%s匹配耗时: %s", domains[0].Type, domain, elapsed)
+	log.Infoln("域名%s匹配耗时: %s", domain, elapsed)
 	
 	return r
 }
