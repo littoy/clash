@@ -4,7 +4,8 @@ package rules
 import (
 	//"strings"
 	"errors"
-
+	
+	"github.com/Dreamacro/clash/rules/router"
 	"github.com/Dreamacro/clash/common/strmatcher"
 )
 
@@ -15,7 +16,7 @@ var matcherTypeMap = map[Domain_Type]strmatcher.Type{
 	Domain_Full:   strmatcher.Full,
 }
 
-func domainToMatcher(domain *Domain) (strmatcher.Matcher, error) {
+func domainToMatcher(domain *router.Domain) (strmatcher.Matcher, error) {
 	matcherType, f := matcherTypeMap[domain.Type]
 	if !f {
 		return nil, errors.New("unsupported domain type", domain.Type)
@@ -33,7 +34,7 @@ type DomainMatcher struct {
 	matchers strmatcher.IndexMatcher
 }
 
-func NewDomainMatcher(domains []*Domain) (*DomainMatcher, error) {
+func NewDomainMatcher(domains []*router.Domain) (*DomainMatcher, error) {
 	g := new(strmatcher.MatcherGroup)
 	for _, d := range domains {
 		m, err := domainToMatcher(d)
