@@ -32,8 +32,6 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	
 	start := time.Now()
 	
-	var matcher DomainMatcher
-	
 	if DomainMatcherCache[country] == nil {
 		
 		domains, err := loadGeositeWithAttr("geosite.dat", country)
@@ -51,11 +49,9 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 		
 		defer runtime.GC()
 		DomainMatcherCache[country] = &matcher
-	} else {
-		matcher := DomainMatcherCache[country]
 	}
 	
-	r := matcher.ApplyDomain(domain)
+	r := DomainMatcherCache[country].ApplyDomain(domain)
 	
 	elapsed := time.Since(start)
 	
