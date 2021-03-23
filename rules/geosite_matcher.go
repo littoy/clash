@@ -11,10 +11,10 @@ import (
 )
 
 var matcherTypeMap = map[router.Domain_Type]strmatcher.Type{
-	Domain_Plain:  strmatcher.Substr,
-	Domain_Regex:  strmatcher.Regex,
-	Domain_Domain: strmatcher.Domain,
-	Domain_Full:   strmatcher.Full,
+	router.Domain_Plain:  strmatcher.Substr,
+	router.Domain_Regex:  strmatcher.Regex,
+	router.Domain_Domain: strmatcher.Domain,
+	router.Domain_Full:   strmatcher.Full,
 }
 
 func domainToMatcher(domain *router.Domain) (strmatcher.Matcher, error) {
