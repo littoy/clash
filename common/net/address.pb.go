@@ -141,7 +141,7 @@ func file_common_net_address_proto_rawDescGZIP() []byte {
 
 var file_common_net_address_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_common_net_address_proto_goTypes = []interface{}{
-	(*IPOrDomain)(nil), // 0: xray.common.net.IPOrDomain
+	(*IPOrDomain)(nil), 
 }
 var file_common_net_address_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
