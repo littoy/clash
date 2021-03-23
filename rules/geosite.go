@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"errors"
 	"io"
 	"os"
 	"runtime"
@@ -46,10 +47,10 @@ func loadFile(file string) ([]byte, error) {
 	if FileCache[file] == nil {
 		bs, err := ReadAsset(file)
 		if err != nil {
-			return nil, newError("failed to open file: ", file).Base(err)
+			return nil, errors.New("failed to open file: ", file)
 		}
 		if len(bs) == 0 {
-			return nil, newError("empty file: ", file)
+			return nil, errors.New("empty file: ", file)
 		}
 		// Do not cache file, may save RAM when there
 		// are many files, but consume CPU each time.
@@ -64,15 +65,15 @@ func loadSite(file, code string) ([]*Domain, error) {
 	if SiteCache[index] == nil {
 		bs, err := loadFile(C.Path.GeoSite())
 		if err != nil {
-			return nil, newError("failed to load file: ", file).Base(err)
+			return nil, errors.New("failed to load file: ", file)
 		}
 		bs = find(bs, []byte(code))
 		if bs == nil {
-			return nil, newError("list not found in ", file, ": ", code)
+			return nil, errors.New("list not found in ", file, ": ", code)
 		}
 		var geosite GeoSite
 		if err := proto.Unmarshal(bs, &geosite); err != nil {
-			return nil, newError("error unmarshal Site in ", file, ": ", code).Base(err)
+			return nil, errors.New("error unmarshal Site in ", file, ": ", code)
 		}
 		defer runtime.GC()         // or debug.FreeOSMemory()
 		return geosite.Domain, nil // do not cache geosite
@@ -159,7 +160,7 @@ func parseAttrs(attrs []string) *AttributeList {
 func loadGeositeWithAttr(file string, siteWithAttr string) ([]*Domain, error) {
 	parts := strings.Split(siteWithAttr, "@")
 	if len(parts) == 0 {
-		return nil, newError("empty site")
+		return nil, errors.New("empty site")
 	}
 	country := strings.ToUpper(parts[0])
 	attrs := parseAttrs(parts[1:])
@@ -197,7 +198,7 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	domains, err := loadGeositeWithAttr("geosite.dat", country)
 	if err != nil {
 		return false
-		//return nil, newError("failed to load geosite: ", country).Base(err)
+		//return nil, errors.New("failed to load geosite: ", country)
 	}
 	
 	matcher, err := NewDomainMatcher(domains)
