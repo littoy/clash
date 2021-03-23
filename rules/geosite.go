@@ -50,7 +50,7 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 		}
 		
 		defer runtime.GC()
-		DomainMatcherCache[country] = &matcher
+		DomainMatcherCache[country] := &matcher
 	} else {
 		matcher := DomainMatcherCache[country]
 	}
