@@ -2,16 +2,14 @@ package rules
 
 import (
 	//"errors"
-	"time"
+	//"time"
 	"runtime"
 
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/log"
 )
 
-var (
-	DomainMatcherCache = make(map[string]*DomainMatcher)
-)
+var DomainMatcherCache = make(map[string]*DomainMatcher)
 
 type GEOSITE struct {
 	country     string
@@ -30,7 +28,7 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	domain := metadata.Host
 	country := g.country
 	
-	start := time.Now()
+	//start := time.Now()
 	
 	if DomainMatcherCache[country] == nil {
 		
@@ -53,9 +51,8 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	
 	r := DomainMatcherCache[country].ApplyDomain(domain)
 	
-	elapsed := time.Since(start)
-	
-	log.Infoln("域名%s匹配耗时: %s", domain, elapsed)
+	//elapsed := time.Since(start)
+	//log.Infoln("域名%s匹配耗时: %s", domain, elapsed)
 	
 	return r
 }
