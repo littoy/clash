@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package xray.common.net;
-option csharp_namespace = "Xray.Common.Net";
-option go_package = "github.com/xtls/xray-core/common/net";
-option java_package = "com.xray.common.net";
+package clash.common.net;
+option csharp_namespace = "Clash.Common.Net";
+option go_package = "github.com/Dreamacro/clash/common/net";
+option java_package = "com.clash.common.net";
 option java_multiple_files = true;
 
 // PortRange represents a range of ports.
