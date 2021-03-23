@@ -7,15 +7,7 @@ import (
 	"strings"
 	
 	C "github.com/Dreamacro/clash/constant"
-	
-	router "github.com/Dreamacro/clash/hub/route"
-	
 	"github.com/golang/protobuf/proto"
-
-	//"github.com/xtls/xray-core/app/router"
-	//"github.com/xtls/xray-core/common/net"
-	//"github.com/xtls/xray-core/common/platform/filesystem"
-	//"github.com/xtls/xray-core/common/platform/filesystem/file.go"
 )
 
 type GEOSITE struct {
