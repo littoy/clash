@@ -165,11 +165,11 @@ func file_common_net_port_proto_rawDescGZIP() []byte {
 
 var file_common_net_port_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_common_net_port_proto_goTypes = []interface{}{
-	(*PortRange)(nil), // 0: xray.common.net.PortRange
-	(*PortList)(nil),  // 1: xray.common.net.PortList
+	(*PortRange)(nil), // 0: clash.common.net.PortRange
+	(*PortList)(nil),  // 1: clash.common.net.PortList
 }
 var file_common_net_port_proto_depIdxs = []int32{
-	0, // 0: xray.common.net.PortList.range:type_name -> xray.common.net.PortRange
+	0, // 0: clash.common.net.PortList.range:type_name -> clash.common.net.PortRange
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
