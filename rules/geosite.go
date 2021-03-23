@@ -3,6 +3,7 @@ package rules
 import (
 	//"errors"
 
+	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/log"
 )
 
