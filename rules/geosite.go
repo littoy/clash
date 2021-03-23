@@ -39,9 +39,7 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 		return false
 	}
 	
-	r := matcher.ApplyDomain(domain)
-	
-	return r
+	return matcher.ApplyDomain(domain)
 }
 
 func (g *GEOSITE) Adapter() string {
