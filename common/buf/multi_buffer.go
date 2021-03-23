@@ -1,8 +1,8 @@
 package buf
 
 import (
+	"os"
 	"io"
-	"errors"
 )
 
 // ReadAllToBytes reads all content from the reader into a byte array, until EOF.
@@ -84,7 +84,17 @@ func ReadFrom(reader io.Reader) (MultiBuffer, error) {
 			mb = append(mb, b)
 		}
 		if err != nil {
-			if err.Err == io.EOF || err.Err == io.ErrUnexpectedEOF {
+			inner := err.(type)
+			
+			if inner == *os.PathError && inner.Err != nil {
+				err = inner.Err
+			} else if inner == *os.SyscallError && inner.Err != nil {
+				err = inner.Err
+			} else if inner.inner != nil {
+				err = inner.inner
+			}
+			
+			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				return mb, nil
 			}
 			return mb, err
@@ -128,30 +138,6 @@ func SplitFirstBytes(mb MultiBuffer, p []byte) (MultiBuffer, int) {
 	n := copy(p, b.Bytes())
 	b.Release()
 	return mb, n
-}
-
-// Compact returns another MultiBuffer by merging all content of the given one together.
-func Compact(mb MultiBuffer) MultiBuffer {
-	if len(mb) == 0 {
-		return mb
-	}
-
-	mb2 := make(MultiBuffer, 0, len(mb))
-	last := mb[0]
-
-	for i := 1; i < len(mb); i++ {
-		curr := mb[i]
-		if last.Len()+curr.Len() > Size {
-			mb2 = append(mb2, last)
-			last = curr
-		} else {
-			common.Must2(last.ReadFrom(curr))
-			curr.Release()
-		}
-	}
-
-	mb2 = append(mb2, last)
-	return mb2
 }
 
 // SplitFirst splits the first Buffer from the beginning of the MultiBuffer.
@@ -240,15 +226,6 @@ func (mb MultiBuffer) IsEmpty() bool {
 		}
 	}
 	return true
-}
-
-// String returns the content of the MultiBuffer in string.
-func (mb MultiBuffer) String() string {
-	v := make([]interface{}, len(mb))
-	for i, b := range mb {
-		v[i] = b
-	}
-	return serial.Concat(v...)
 }
 
 // MultiBufferContainer is a ReadWriteCloser wrapper over MultiBuffer.
