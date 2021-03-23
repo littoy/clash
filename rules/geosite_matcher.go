@@ -35,7 +35,7 @@ type DomainMatcher struct {
 	matchers strmatcher.IndexMatcher
 }
 
-func NewDomainMatcher(domains []*router.Domain) (DomainMatcher, error) {
+func NewDomainMatcher(domains []*router.Domain) (*DomainMatcher, error) {
 	g := new(strmatcher.MatcherGroup)
 	for _, d := range domains {
 		m, err := domainToMatcher(d)
