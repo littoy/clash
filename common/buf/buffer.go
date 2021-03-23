@@ -223,7 +223,7 @@ func (b *Buffer) ReadFullFrom(reader io.Reader, size int32) (int64, error) {
 	end := b.end + size
 	if end > int32(len(b.v)) {
 		v := end
-		return 0, errors.New(fmt.Sprintf("out of bound: %s", v))
+		return 0, errors.New(fmt.Sprintf("out of bound: %d", v))
 	}
 	n, err := io.ReadFull(reader, b.v[b.end:end])
 	b.end += int32(n)
