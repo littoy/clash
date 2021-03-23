@@ -8,6 +8,10 @@ import (
 	"github.com/Dreamacro/clash/log"
 )
 
+var (
+	DomainMatcherCache = make(map[string]*DomainMatcher)
+)
+
 type GEOSITE struct {
 	country     string
 	adapter     string
@@ -27,17 +31,26 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	
 	start := time.Now()
 	
-	domains, err := loadGeositeWithAttr("geosite.dat", country)
-	if err != nil {
-		log.Errorln("failed to load geosite: %s, base error: %s", country, err.Error())
-		return false
-	}
+	var matcher DomainMatcher
 	
-	matcher, err := NewDomainMatcher(domains)
-	
-	if err != nil {
-		log.Errorln("failed to create DomainMatcher: %s", err.Error())
-		return false
+	if DomainMatcherCache[country] == nil {
+		
+		domains, err := loadGeositeWithAttr("geosite.dat", country)
+		if err != nil {
+			log.Errorln("failed to load geosite: %s, base error: %s", country, err.Error())
+			return false
+		}
+
+		matcher, err := NewDomainMatcher(domains)
+
+		if err != nil {
+			log.Errorln("failed to create DomainMatcher: %s", err.Error())
+			return false
+		}
+		
+		DomainMatcherCache[country] = &matcher
+	} else {
+		matcher := DomainMatcherCache[country]
 	}
 	
 	r := matcher.ApplyDomain(domain)
