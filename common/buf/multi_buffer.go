@@ -84,17 +84,7 @@ func ReadFrom(reader io.Reader) (MultiBuffer, error) {
 			mb = append(mb, b)
 		}
 		if err != nil {
-			inner := err.(type)
-			
-			if inner == *os.PathError && inner.Err != nil {
-				err = inner.Err
-			} else if inner == *os.SyscallError && inner.Err != nil {
-				err = inner.Err
-			} else if inner.inner != nil {
-				err = inner.inner
-			}
-			
-			if err == io.EOF || err == io.ErrUnexpectedEOF {
+			if Cause(err) == io.EOF || Cause(err) == io.ErrUnexpectedEOF {
 				return mb, nil
 			}
 			return mb, err
@@ -268,4 +258,28 @@ func (c *MultiBufferContainer) WriteMultiBuffer(b MultiBuffer) error {
 func (c *MultiBufferContainer) Close() error {
 	c.MultiBuffer = ReleaseMulti(c.MultiBuffer)
 	return nil
+}
+
+func Cause(err error) error {
+	if err == nil {
+		return nil
+	}
+L:
+	for {
+		switch inner := err.(type) {
+		case *os.PathError:
+			if inner.Err == nil {
+				break L
+			}
+			err = inner.Err
+		case *os.SyscallError:
+			if inner.Err == nil {
+				break L
+			}
+			err = inner.Err
+		default:
+			break L
+		}
+	}
+	return err
 }
