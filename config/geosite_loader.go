@@ -83,7 +83,7 @@ func loadIP(file, code string) ([]*router.CIDR, error) {
 func loadSite(file, code string) ([]*router.Domain, error) {
 	index := file + ":" + code
 	if SiteCache[index] == nil {
-		bs, err := loadFile(file)
+		bs, err := loadFile(C.Path.GeoSite())
 		if err != nil {
 			return nil, errors.New("failed to load file: " + file)
 		}
