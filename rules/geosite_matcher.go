@@ -3,6 +3,7 @@ package rules
 
 import (
 	//"strings"
+	"errors"
 
 	"github.com/Dreamacro/clash/common/strmatcher"
 )
@@ -17,12 +18,12 @@ var matcherTypeMap = map[Domain_Type]strmatcher.Type{
 func domainToMatcher(domain *Domain) (strmatcher.Matcher, error) {
 	matcherType, f := matcherTypeMap[domain.Type]
 	if !f {
-		return nil, newError("unsupported domain type", domain.Type)
+		return nil, errors.New("unsupported domain type", domain.Type)
 	}
 
 	matcher, err := matcherType.New(domain.Value)
 	if err != nil {
-		return nil, newError("failed to create domain matcher").Base(err)
+		return nil, errors.New("failed to create domain matcher").Base(err)
 	}
 
 	return matcher, nil
