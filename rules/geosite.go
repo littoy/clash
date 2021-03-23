@@ -8,6 +8,7 @@ import (
 	"strings"
 	
 	C "github.com/Dreamacro/clash/constant"
+	"github.com/Dreamacro/clash/log"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -47,10 +48,10 @@ func loadFile(file string) ([]byte, error) {
 	if FileCache[file] == nil {
 		bs, err := ReadAsset(file)
 		if err != nil {
-			return nil, errors.New("failed to open file: ", file)
+			return nil, errors.New("failed to open file: " + file)
 		}
 		if len(bs) == 0 {
-			return nil, errors.New("empty file: ", file)
+			return nil, errors.New("empty file: " + file)
 		}
 		// Do not cache file, may save RAM when there
 		// are many files, but consume CPU each time.
@@ -65,15 +66,15 @@ func loadSite(file, code string) ([]*Domain, error) {
 	if SiteCache[index] == nil {
 		bs, err := loadFile(C.Path.GeoSite())
 		if err != nil {
-			return nil, errors.New("failed to load file: ", file)
+			return nil, errors.New("failed to load file: " + file)
 		}
 		bs = find(bs, []byte(code))
 		if bs == nil {
-			return nil, errors.New("list not found in ", file, ": ", code)
+			return nil, errors.New("list not found in " + file + ": " + code)
 		}
 		var geosite GeoSite
 		if err := proto.Unmarshal(bs, &geosite); err != nil {
-			return nil, errors.New("error unmarshal Site in ", file, ": ", code)
+			return nil, errors.New("error unmarshal Site in " + file + ": " + code)
 		}
 		defer runtime.GC()         // or debug.FreeOSMemory()
 		return geosite.Domain, nil // do not cache geosite
@@ -197,13 +198,15 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	
 	domains, err := loadGeositeWithAttr("geosite.dat", country)
 	if err != nil {
+		//log.Infoln("HTTP proxy listening at: %s", addr)
+		log.Errorln("failed to load geosite: %s, base error: %s", country, err.Error())
 		return false
-		//return nil, errors.New("failed to load geosite: ", country)
 	}
 	
 	matcher, err := NewDomainMatcher(domains)
 	
 	if err != nil {
+		log.Errorln("failed to new DomainMatcher: %s", err.Error())
 		return false
 	}
 	
