@@ -14,10 +14,13 @@ import (
 	"github.com/Dreamacro/clash/rules/router"
 )
 
+func loadGeoIP(code string) ([]*router.CIDR, error) {
+	return loadIP("geoip.dat", code)
+}
 
 var (
 	FileCache = make(map[string][]byte)
-	//IPCache   = make(map[string]*router.GeoIP)
+	IPCache   = make(map[string]*router.GeoIP)
 	SiteCache = make(map[string]*router.GeoSite)
 )
 
