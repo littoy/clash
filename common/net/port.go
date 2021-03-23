@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"strconv"
 	"errors"
+	"fmt"
 )
 
 // Port represents a network port in TCP and UDP protocol.
@@ -19,7 +20,7 @@ func PortFromBytes(port []byte) Port {
 // @error when the integer is not positive or larger then 65535
 func PortFromInt(val uint32) (Port, error) {
 	if val > 65535 {
-		return Port(0), errors.New("invalid port range: " + val)
+		return Port(0), errors.New(fmt.Sprintf("invalid port range: %s", val))
 	}
 	return Port(val), nil
 }
