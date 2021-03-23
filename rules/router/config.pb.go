@@ -4,7 +4,7 @@
 //      protoc        v3.15.6
 // source: config.proto
 
-package rules
+package router
 
 import (
         proto "github.com/golang/protobuf/proto"
@@ -89,7 +89,7 @@ type Domain struct {
         unknownFields protoimpl.UnknownFields
 
         // Domain matching type.
-        Type Domain_Type `protobuf:"varint,1,opt,name=type,proto3,enum=clash.rules.Domain_Type" json:"type,omitempty"`
+        Type Domain_Type `protobuf:"varint,1,opt,name=type,proto3,enum=clash.rules.router.Domain_Type" json:"type,omitempty"`
         // Domain value.
         Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
         // Attributes of this domain. May be used for filtering.
@@ -566,22 +566,22 @@ func file_config_proto_rawDescGZIP() []byte {
 var file_config_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_config_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_config_proto_goTypes = []interface{}{
-        (Domain_Type)(0),         // 0: clash.rules.Domain.Type
-        (*Domain)(nil),           // 1: clash.rules.Domain
-        (*CIDR)(nil),             // 2: clash.rules.CIDR
-        (*GeoIP)(nil),            // 3: clash.rules.GeoIP
-        (*GeoIPList)(nil),        // 4: clash.rules.GeoIPList
-        (*GeoSite)(nil),          // 5: clash.rules.GeoSite
-        (*GeoSiteList)(nil),      // 6: clash.rules.GeoSiteList
-        (*Domain_Attribute)(nil), // 7: clash.rules.Domain.Attribute
+        (Domain_Type)(0),         // 0: clash.rules.router.Domain.Type
+        (*Domain)(nil),           // 1: clash.rules.router.Domain
+        (*CIDR)(nil),             // 2: clash.rules.router.CIDR
+        (*GeoIP)(nil),            // 3: clash.rules.router.GeoIP
+        (*GeoIPList)(nil),        // 4: clash.rules.router.GeoIPList
+        (*GeoSite)(nil),          // 5: clash.rules.router.GeoSite
+        (*GeoSiteList)(nil),      // 6: clash.rules.router.GeoSiteList
+        (*Domain_Attribute)(nil), // 7: clash.rules.router.Domain.Attribute
 }
 var file_config_proto_depIdxs = []int32{
-        0, // 0: clash.rules.Domain.type:type_name -> clash.rules.Domain.Type
-        7, // 1: clash.rules.Domain.attribute:type_name -> clash.rules.Domain.Attribute
-        2, // 2: clash.rules.GeoIP.cidr:type_name -> clash.rules.CIDR
-        3, // 3: clash.rules.GeoIPList.entry:type_name -> clash.rules.GeoIP
-        1, // 4: clash.rules.GeoSite.domain:type_name -> clash.rules.Domain
-        5, // 5: clash.rules.GeoSiteList.entry:type_name -> clash.rules.GeoSite
+        0, // 0: clash.rules.router.Domain.type:type_name -> clash.rules.router.Domain.Type
+        7, // 1: clash.rules.router.Domain.attribute:type_name -> clash.rules.router.Domain.Attribute
+        2, // 2: clash.rules.router.GeoIP.cidr:type_name -> clash.rules.router.CIDR
+        3, // 3: clash.rules.router.GeoIPList.entry:type_name -> clash.rules.router.GeoIP
+        1, // 4: clash.rules.router.GeoSite.domain:type_name -> clash.rules.router.Domain
+        5, // 5: clash.rules.router.GeoSiteList.entry:type_name -> clash.rules.router.GeoSite
         6, // [6:6] is the sub-list for method output_type
         6, // [6:6] is the sub-list for method input_type
         6, // [6:6] is the sub-list for extension type_name
