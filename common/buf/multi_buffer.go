@@ -84,7 +84,7 @@ func ReadFrom(reader io.Reader) (MultiBuffer, error) {
 			mb = append(mb, b)
 		}
 		if err != nil {
-			if errors.Cause(err) == io.EOF || errors.Cause(err) == io.ErrUnexpectedEOF {
+			if err.Err == io.EOF || err.Err == io.ErrUnexpectedEOF {
 				return mb, nil
 			}
 			return mb, err
