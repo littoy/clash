@@ -1,6 +1,6 @@
 NAME=clash
 BINDIR=bin
-VERSION=$(shell git describe --tags || echo "unknown version")
+VERSION=$(shell git describe --tags || shell rev-parse --short ${{ github.sha }})
 BUILDTIME=$(shell date -u)
 GOBUILD=CGO_ENABLED=0 go build -trimpath -ldflags '-X "github.com/Dreamacro/clash/constant.Version=$(VERSION)" \
 		-X "github.com/Dreamacro/clash/constant.BuildTime=$(BUILDTIME)" \
