@@ -11,6 +11,7 @@ type GEOSITE struct {
 	country     string
 	adapter     string
 	noResolveIP bool
+	domainType  string
 }
 
 func (g *GEOSITE) RuleType() C.RuleType {
@@ -54,11 +55,12 @@ func (g *GEOSITE) ShouldResolveIP() bool {
 	return !g.noResolveIP
 }
 
-func NewGEOSITE(country string, adapter string, noResolveIP bool) *GEOSITE {
+func NewGEOSITE(country string, adapter string, domainType string) *GEOSITE {
 	geosite := &GEOSITE{
 		country:     country,
 		adapter:     adapter,
-		noResolveIP: noResolveIP,
+		noResolveIP: true,
+		domainType:  domainType,
 	}
 
 	return geosite
