@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	DomainMatcherCache = make(map[string]*DomainMatcher)
+	DomainMatcherCache = make(map[string]**DomainMatcher)
 )
 
 type GEOSITE struct {
@@ -50,7 +50,7 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 		}
 		
 		defer runtime.GC()
-		DomainMatcherCache[country] := &matcher
+		DomainMatcherCache[country] = &matcher
 	} else {
 		matcher := DomainMatcherCache[country]
 	}
