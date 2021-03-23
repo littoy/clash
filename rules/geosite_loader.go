@@ -76,7 +76,7 @@ func loadIP(file, code string) ([]*router.CIDR, error) {
 			return nil, errors.New("error unmarshal IP in " + file + ": " + code)
 		}
 		defer runtime.GC()     // or debug.FreeOSMemory()
-		IPCache[index] = &geoip
+		//IPCache[index] = &geoip
 		return geoip.Cidr, nil // do not cache geoip
 		//IPCache[index] = &geoip
 	}
@@ -99,7 +99,7 @@ func loadSite(file, code string) ([]*router.Domain, error) {
 			return nil, errors.New("error unmarshal Site in " + file + ": " + code)
 		}
 		defer runtime.GC()         // or debug.FreeOSMemory()
-		SiteCache[index] = &geosite
+		//SiteCache[index] = &geosite
 		return geosite.Domain, nil // do not cache geosite
 		//SiteCache[index] = &geosite
 	}
