@@ -9,8 +9,9 @@ require (
 	github.com/go-chi/render v1.0.1
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/golang/protobuf v1.4.3
+	github.com/google/go-cmp v0.4.0
 	//github.com/golang/protobuf v1.5.1
-	github.com/google/go-cmp v0.5.5
+	//github.com/google/go-cmp v0.5.5
 	github.com/gorilla/websocket v1.4.2
 	github.com/miekg/dns v1.1.40
 	github.com/oschwald/geoip2-golang v1.5.0
@@ -22,7 +23,7 @@ require (
 	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210309074719-68d13333faf2
-	google.golang.org/protobuf v1.25.0
+	google.golang.org/protobuf v1.23.0
 	//google.golang.org/protobuf v1.26.0
 	gopkg.in/yaml.v2 v2.4.0
 )
