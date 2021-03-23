@@ -2,6 +2,7 @@ package rules
 
 import (
 	//"errors"
+	"time"
 
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/log"
@@ -10,8 +11,6 @@ import (
 type GEOSITE struct {
 	country     string
 	adapter     string
-	noResolveIP bool
-	domainType  string
 }
 
 func (g *GEOSITE) RuleType() C.RuleType {
@@ -26,9 +25,10 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	domain := metadata.Host
 	country := g.country
 	
+	start := time.Now()
+	
 	domains, err := loadGeositeWithAttr("geosite.dat", country)
 	if err != nil {
-		//log.Infoln("HTTP proxy listening at: %s", addr)
 		log.Errorln("failed to load geosite: %s, base error: %s", country, err.Error())
 		return false
 	}
@@ -40,7 +40,13 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 		return false
 	}
 	
-	return matcher.ApplyDomain(domain)
+	r := matcher.ApplyDomain(domain)
+	
+	elapsed := time.Since(start)
+	
+	log.Infoln("列表类型%d，域名%s匹配耗时: %s", domains[0].Type, domain, elapsed)
+	
+	return r
 }
 
 func (g *GEOSITE) Adapter() string {
@@ -52,15 +58,13 @@ func (g *GEOSITE) Payload() string {
 }
 
 func (g *GEOSITE) ShouldResolveIP() bool {
-	return !g.noResolveIP
+	return false
 }
 
-func NewGEOSITE(country string, adapter string, domainType string) *GEOSITE {
+func NewGEOSITE(country string, adapter string) *GEOSITE {
 	geosite := &GEOSITE{
 		country:     country,
 		adapter:     adapter,
-		noResolveIP: true,
-		domainType:  domainType,
 	}
 
 	return geosite
