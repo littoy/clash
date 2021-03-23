@@ -37,8 +37,8 @@ jobs:
         run: |
           go test ./...
           go vet ./...
-          go install honnef.co/go/tools/cmd/staticcheck@latest
-          staticcheck -- $(go list ./...)
+          #go install honnef.co/go/tools/cmd/staticcheck@latest
+          #staticcheck -- $(go list ./...)
 
       - name: Build
         #if: startsWith(github.ref, 'refs/tags/')
@@ -46,7 +46,14 @@ jobs:
           NAME: clash
           BINDIR: bin
         run: make -j releases
-
+      
+      - name: Upload files to Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: clash-$(git rev-parse --short ${{ github.sha }})
+          path: |
+            bin/*
+            
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         #if: startsWith(github.ref, 'refs/tags/')
