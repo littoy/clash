@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	DomainMatcherCache = make(map[string]**DomainMatcher)
+	DomainMatcherCache = make(map[string]*DomainMatcher)
 )
 
 type GEOSITE struct {
