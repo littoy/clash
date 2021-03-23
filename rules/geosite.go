@@ -7,6 +7,7 @@ import (
 	"strings"
 	
 	C "github.com/Dreamacro/clash/constant"
+	router "github.com/Dreamacro/clash/rules"
 	"github.com/golang/protobuf/proto"
 )
 
