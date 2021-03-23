@@ -31,7 +31,7 @@ type Endpoint struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Network Network     `protobuf:"varint,1,opt,name=network,proto3,enum=xray.common.net.Network" json:"network,omitempty"`
+	Network Network     `protobuf:"varint,1,opt,name=network,proto3,enum=clash.common.net.Network" json:"network,omitempty"`
 	Address *IPOrDomain `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 	Port    uint32      `protobuf:"varint,3,opt,name=port,proto3" json:"port,omitempty"`
 }
@@ -129,13 +129,13 @@ func file_common_net_destination_proto_rawDescGZIP() []byte {
 
 var file_common_net_destination_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_common_net_destination_proto_goTypes = []interface{}{
-	(*Endpoint)(nil),   // 0: xray.common.net.Endpoint
-	(Network)(0),       // 1: xray.common.net.Network
-	(*IPOrDomain)(nil), // 2: xray.common.net.IPOrDomain
+	(*Endpoint)(nil),   // 0: clash.common.net.Endpoint
+	(Network)(0),       // 1: clash.common.net.Network
+	(*IPOrDomain)(nil), // 2: clash.common.net.IPOrDomain
 }
 var file_common_net_destination_proto_depIdxs = []int32{
-	1, // 0: xray.common.net.Endpoint.network:type_name -> xray.common.net.Network
-	2, // 1: xray.common.net.Endpoint.address:type_name -> xray.common.net.IPOrDomain
+	1, // 0: clash.common.net.Endpoint.network:type_name -> clash.common.net.Network
+	2, // 1: clash.common.net.Endpoint.address:type_name -> clash.common.net.IPOrDomain
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
