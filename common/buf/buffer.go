@@ -3,6 +3,7 @@ package buf
 import (
 	"io"
 	"errors"
+	"fmt"
 
 	"github.com/Dreamacro/clash/common/bytespool"
 	"github.com/Dreamacro/clash/common/net"
@@ -222,7 +223,7 @@ func (b *Buffer) ReadFullFrom(reader io.Reader, size int32) (int64, error) {
 	end := b.end + size
 	if end > int32(len(b.v)) {
 		v := end
-		return 0, errors.New("out of bound: " + v)
+		return 0, errors.New(fmt.Sprintf("out of bound: %s", v))
 	}
 	n, err := io.ReadFull(reader, b.v[b.end:end])
 	b.end += int32(n)
