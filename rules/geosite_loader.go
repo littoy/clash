@@ -7,9 +7,7 @@ import (
 	"runtime"
 	"strings"
 
-	//"github.com/golang/protobuf/proto"
-	"google.golang.org/protobuf/proto"
-
+	"github.com/golang/protobuf/proto"
 	"github.com/Dreamacro/clash/common/buf"
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/rules/router"
