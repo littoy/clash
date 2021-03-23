@@ -4,12 +4,13 @@ package rules
 import (
 	//"strings"
 	"errors"
+	"fmt"
 	
 	"github.com/Dreamacro/clash/rules/router"
 	"github.com/Dreamacro/clash/common/strmatcher"
 )
 
-var matcherTypeMap = map[Domain_Type]strmatcher.Type{
+var matcherTypeMap = map[router.Domain_Type]strmatcher.Type{
 	Domain_Plain:  strmatcher.Substr,
 	Domain_Regex:  strmatcher.Regex,
 	Domain_Domain: strmatcher.Domain,
@@ -19,7 +20,7 @@ var matcherTypeMap = map[Domain_Type]strmatcher.Type{
 func domainToMatcher(domain *router.Domain) (strmatcher.Matcher, error) {
 	matcherType, f := matcherTypeMap[domain.Type]
 	if !f {
-		return nil, errors.New("unsupported domain type", domain.Type)
+		return nil, fmt.Errorf("unsupported domain type %d", domain.Type)
 	}
 
 	matcher, err := matcherType.New(domain.Value)
