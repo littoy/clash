@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"net"
 	"strings"
+	
+	"github.com/Dreamacro/clash/log"
 )
 
 var (
@@ -112,7 +114,7 @@ func IPAddress(ip []byte) Address {
 		}
 		return addr
 	default:
-		newError("invalid IP format: ", ip).AtError().WriteToLog()
+		log.Errorln("invalid IP format: %s", ip)
 		return nil
 	}
 }
