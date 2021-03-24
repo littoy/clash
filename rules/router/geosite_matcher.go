@@ -7,6 +7,7 @@ import (
 	"runtime"
 	
 	"github.com/Dreamacro/clash/common/strmatcher"
+	"github.com/Dreamacro/clash/log"
 )
 
 var (
@@ -43,6 +44,8 @@ func NewDomainMatcher(country string) (*DomainMatcher, error) {
 	if DomainMatcherCache[country] != nil {
 		return DomainMatcherCache[country], nil;
 	}
+	
+	log.Warnln("[GeoSite] Miss domain matcher cache for country: %s", country)
 	
 	domains, err := loadGeositeWithAttr("geosite.dat", country)
 	if err != nil {
