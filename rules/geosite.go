@@ -38,7 +38,7 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	
 	if r {
 		elapsed := time.Since(start)
-		log.Debugln("Match domain \"%s\" spend time: %s", domain, elapsed)
+		log.Infoln("Match domain \"%s\" spend time: %s", domain, elapsed)
 	}
 	
 	return r
