@@ -3,13 +3,11 @@ package rules
 import (
 	//"errors"
 	"time"
-	"runtime"
 
+	"github.com/Dreamacro/clash/rules/router"
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/log"
 )
-
-var DomainMatcherCache = make(map[string]*DomainMatcher)
 
 type GEOSITE struct {
 	country     string
@@ -30,27 +28,20 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	
 	start := time.Now()
 	
-	if DomainMatcherCache[country] == nil {
-		
-		domains, err := loadGeositeWithAttr("geosite.dat", country)
-		if err != nil {
-			log.Errorln("Failed to load geosite: %s, base error: %s", country, err.Error())
-			return false
-		}
+	domains, err := loadGeositeWithAttr("geosite.dat", country)
+	if err != nil {
+		log.Errorln("Failed to load geosite: %s, base error: %s", country, err.Error())
+		return false
+	}
 
-		matcher, err := NewDomainMatcher(domains)
+	matcher, err := router.NewDomainMatcher(domains, country)
 
-		if err != nil {
-			log.Errorln("Failed to create DomainMatcher: %s", err.Error())
-			return false
-		}
-		
-		defer runtime.GC()
-		DomainMatcherCache[country] = matcher
+	if err != nil {
+		log.Errorln("Failed to create DomainMatcher: %s", err.Error())
+		return false
 	}
 	
-	r := DomainMatcherCache[country].ApplyDomain(domain)
-	
+	r := matcher.ApplyDomain(domain)
 	
 	if r {
 		elapsed := time.Since(start)
