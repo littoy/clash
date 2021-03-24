@@ -2,7 +2,7 @@ package rules
 
 import (
 	//"errors"
-	"time"
+	//"time"
 
 	"github.com/Dreamacro/clash/rules/router"
 	C "github.com/Dreamacro/clash/constant"
@@ -23,7 +23,7 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 		return false
 	}
 	
-	start := time.Now()
+	//start := time.Now()
 	
 	domain := metadata.Host
 	
@@ -35,11 +35,11 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	}
 	
 	r := matcher.ApplyDomain(domain)
-	
+	/**
 	if r {
 		elapsed := time.Since(start)
 		log.Infoln("Match domain \"%s\" spend time: %s", domain, elapsed)
-	}
+	} **/
 	
 	return r
 }
