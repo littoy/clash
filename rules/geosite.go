@@ -2,7 +2,7 @@ package rules
 
 import (
 	//"errors"
-	"time"
+	//"time"
 
 	"github.com/Dreamacro/clash/rules/router"
 	C "github.com/Dreamacro/clash/constant"
@@ -23,11 +23,10 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 		return false
 	}
 	
+	//start := time.Now()
+	
 	domain := metadata.Host
 	country := g.country
-	
-	start := time.Now()
-	
 	domains, err := loadGeositeWithAttr("geosite.dat", country)
 	if err != nil {
 		log.Errorln("Failed to load geosite: %s, base error: %s", country, err.Error())
@@ -43,10 +42,10 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	
 	r := matcher.ApplyDomain(domain)
 	
-	if r {
+	/** if r {
 		elapsed := time.Since(start)
 		log.Infoln("Match domain \"%s\" spend time: %s", domain, elapsed)
-	}
+	} **/
 	
 	return r
 }
