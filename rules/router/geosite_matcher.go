@@ -1,5 +1,5 @@
 
-package rules
+package router
 
 import (
 	"errors"
