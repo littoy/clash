@@ -39,9 +39,14 @@ type DomainMatcher struct {
 	matchers strmatcher.IndexMatcher
 }
 
-func NewDomainMatcher(domains []*Domain, country string) (*DomainMatcher, error) {
+func NewDomainMatcher(country string) (*DomainMatcher, error) {
 	
 	if DomainMatcherCache[country] == nil {
+		domains, err := loadGeositeWithAttr("geosite.dat", country)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to load geosite: %s, base error: %s", country, err.Error())
+		}
+		
 		g := new(strmatcher.MatcherGroup)
 		for _, d := range domains {
 			m, err := domainToMatcher(d)
