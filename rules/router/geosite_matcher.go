@@ -7,7 +7,7 @@ import (
 	"runtime"
 	
 	"github.com/Dreamacro/clash/common/strmatcher"
-	"github.com/Dreamacro/clash/log"
+	//"github.com/Dreamacro/clash/log"
 )
 
 var (
@@ -58,7 +58,7 @@ func NewDomainMatcher(domains []*Domain, country string) (*DomainMatcher, error)
 		return DomainMatcherCache[country], nil
 	}
 	
-	log.Debugln("Using GeoSite matcher cache for country: %s", country)
+	//log.Debugln("Using GeoSite matcher cache for country: %s", country)
 	
 	return DomainMatcherCache[country], nil;
 }
