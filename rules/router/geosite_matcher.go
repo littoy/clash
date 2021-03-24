@@ -7,7 +7,6 @@ import (
 	"runtime"
 	
 	"github.com/Dreamacro/clash/common/strmatcher"
-	//"github.com/Dreamacro/clash/log"
 )
 
 var (
@@ -41,29 +40,28 @@ type DomainMatcher struct {
 
 func NewDomainMatcher(country string) (*DomainMatcher, error) {
 	
-	if DomainMatcherCache[country] == nil {
-		domains, err := loadGeositeWithAttr("geosite.dat", country)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to load geosite: %s, base error: %s", country, err.Error())
-		}
-		
-		g := new(strmatcher.MatcherGroup)
-		for _, d := range domains {
-			m, err := domainToMatcher(d)
-			if err != nil {
-				return nil, err
-			}
-			g.Add(m)
-		}
-
-		defer runtime.GC()
-		DomainMatcherCache[country] = &DomainMatcher{
-			matchers: g,
-		}
-		return DomainMatcherCache[country], nil
+	if DomainMatcherCache[country] != nil {
+		return DomainMatcherCache[country], nil;
 	}
 	
-	//log.Debugln("Using GeoSite matcher cache for country: %s", country)
+	domains, err := loadGeositeWithAttr("geosite.dat", country)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to load geosite: %s, base error: %s", country, err.Error())
+	}
+
+	g := new(strmatcher.MatcherGroup)
+	for _, d := range domains {
+		m, err := domainToMatcher(d)
+		if err != nil {
+			return nil, err
+		}
+		g.Add(m)
+	}
+
+	defer runtime.GC()
+	DomainMatcherCache[country] = &DomainMatcher{
+		matchers: g,
+	}
 	
 	return DomainMatcherCache[country], nil;
 }
