@@ -2,7 +2,7 @@ package rules
 
 import (
 	//"errors"
-	//"time"
+	"time"
 	"runtime"
 
 	C "github.com/Dreamacro/clash/constant"
@@ -28,22 +28,20 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	domain := metadata.Host
 	country := g.country
 	
-	//start := time.Now()
+	start := time.Now()
 	
-	matcher := DomainMatcherCache[country]
-	
-	if matcher == nil {
+	if DomainMatcherCache[country] == nil {
 		
 		domains, err := loadGeositeWithAttr("geosite.dat", country)
 		if err != nil {
-			log.Errorln("failed to load geosite: %s, base error: %s", country, err.Error())
+			log.Errorln("Failed to load geosite: %s, base error: %s", country, err.Error())
 			return false
 		}
 
 		matcher, err := NewDomainMatcher(domains)
 
 		if err != nil {
-			log.Errorln("failed to create DomainMatcher: %s", err.Error())
+			log.Errorln("Failed to create DomainMatcher: %s", err.Error())
 			return false
 		}
 		
@@ -51,13 +49,13 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 		DomainMatcherCache[country] = matcher
 	}
 	
-	r := matcher.ApplyDomain(domain)
+	r := DomainMatcherCache[country].ApplyDomain(domain)
 	
-	/**
+	
 	if r {
 		elapsed := time.Since(start)
 		log.Infoln("Match domain \"%s\" spend time: %s", domain, elapsed)
-	} **/
+	}
 	
 	return r
 }
