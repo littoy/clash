@@ -1,4 +1,4 @@
-package rules
+package router
 
 import (
 	"errors"
@@ -10,17 +10,16 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/Dreamacro/clash/common/buf"
 	C "github.com/Dreamacro/clash/constant"
-	"github.com/Dreamacro/clash/rules/router"
 )
 
-func loadGeoIP(code string) ([]*router.CIDR, error) {
+func loadGeoIP(code string) ([]*CIDR, error) {
 	return loadIP("geoip.dat", code)
 }
 
 var (
 	FileCache = make(map[string][]byte)
-	IPCache   = make(map[string]*router.GeoIP)
-	SiteCache = make(map[string]*router.GeoSite)
+	IPCache   = make(map[string]*GeoIP)
+	SiteCache = make(map[string]*GeoSite)
 )
 
 type FileReaderFunc func(path string) (io.ReadCloser, error)
@@ -60,7 +59,7 @@ func loadFile(file string) ([]byte, error) {
 	return FileCache[file], nil
 }
 
-func loadIP(file, code string) ([]*router.CIDR, error) {
+func loadIP(file, code string) ([]*CIDR, error) {
 	index := file + ":" + code
 	if IPCache[index] == nil {
 		bs, err := loadFile(file)
@@ -71,7 +70,7 @@ func loadIP(file, code string) ([]*router.CIDR, error) {
 		if bs == nil {
 			return nil, errors.New("code not found in " + file + ": " + code)
 		}
-		var geoip router.GeoIP
+		var geoip GeoIP
 		if err := proto.Unmarshal(bs, &geoip); err != nil {
 			return nil, errors.New("error unmarshal IP in " + file + ": " + code)
 		}
@@ -83,7 +82,7 @@ func loadIP(file, code string) ([]*router.CIDR, error) {
 	return IPCache[index].Cidr, nil
 }
 
-func loadSite(file, code string) ([]*router.Domain, error) {
+func loadSite(file, code string) ([]*Domain, error) {
 	index := file + ":" + code
 	if SiteCache[index] == nil {
 		bs, err := loadFile(C.Path.GeoSite())
@@ -94,7 +93,7 @@ func loadSite(file, code string) ([]*router.Domain, error) {
 		if bs == nil {
 			return nil, errors.New("list not found in " + file + ": " + code)
 		}
-		var geosite router.GeoSite
+		var geosite GeoSite
 		if err := proto.Unmarshal(bs, &geosite); err != nil {
 			return nil, errors.New("error unmarshal Site in " + file + ": " + code)
 		}
@@ -141,12 +140,12 @@ func find(data, code []byte) []byte {
 }
 
 type AttributeMatcher interface {
-	Match(*router.Domain) bool
+	Match(*Domain) bool
 }
 
 type BooleanMatcher string
 
-func (m BooleanMatcher) Match(domain *router.Domain) bool {
+func (m BooleanMatcher) Match(domain *Domain) bool {
 	for _, attr := range domain.Attribute {
 		if attr.Key == string(m) {
 			return true
@@ -159,7 +158,7 @@ type AttributeList struct {
 	matcher []AttributeMatcher
 }
 
-func (al *AttributeList) Match(domain *router.Domain) bool {
+func (al *AttributeList) Match(domain *Domain) bool {
 	for _, matcher := range al.matcher {
 		if !matcher.Match(domain) {
 			return false
@@ -181,7 +180,7 @@ func parseAttrs(attrs []string) *AttributeList {
 	return al
 }
 
-func loadGeositeWithAttr(file string, siteWithAttr string) ([]*router.Domain, error) {
+func loadGeositeWithAttr(file string, siteWithAttr string) ([]*Domain, error) {
 	parts := strings.Split(siteWithAttr, "@")
 	if len(parts) == 0 {
 		return nil, errors.New("empty site")
@@ -197,7 +196,7 @@ func loadGeositeWithAttr(file string, siteWithAttr string) ([]*router.Domain, er
 		return domains, nil
 	}
 
-	filteredDomains := make([]*router.Domain, 0, len(domains))
+	filteredDomains := make([]*Domain, 0, len(domains))
 	for _, domain := range domains {
 		if attrs.Match(domain) {
 			filteredDomains = append(filteredDomains, domain)
