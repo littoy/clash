@@ -7,6 +7,7 @@ import (
 	"runtime"
 	
 	"github.com/Dreamacro/clash/common/strmatcher"
+	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/log"
 )
 
@@ -39,31 +40,44 @@ type DomainMatcher struct {
 	matchers strmatcher.IndexMatcher
 }
 
+// Initial or update GeoSite rules
+func UpdateGeoSiteRule(newRules []C.Rule) {
+	
+	defer runtime.GC()
+	for _, rule := range newRules {
+		if rule.Type == C.GEOSITE {
+			
+			country := rule.Payload
+			domains, err := loadGeositeWithAttr("geosite.dat", country)
+			if err != nil {
+				log.Errorln("Failed to load geosite: %s, base error: %s", country, err.Error())
+				continue
+			}
+
+			g := new(strmatcher.MatcherGroup)
+			for _, d := range domains {
+				m, err := domainToMatcher(d)
+				if err != nil {
+					log.Errorln("Failed to create domain matcher with domain: %s, base error: %s", d, err.Error())
+					continue
+				}
+				g.Add(m)
+			}
+			
+			log.Infoln("Start initial geosite matcher %s", country)
+
+			DomainMatcherCache[country] = &DomainMatcher{
+				matchers: g,
+			}
+		}
+	}
+}
+
 func NewDomainMatcher(country string) (*DomainMatcher, error) {
 	
-	if DomainMatcherCache[country] != nil {
-		return DomainMatcherCache[country], nil;
-	}
-	
-	log.Warnln("[GeoSite] Miss domain matcher cache for country: %s", country)
-	
-	domains, err := loadGeositeWithAttr("geosite.dat", country)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to load geosite: %s, base error: %s", country, err.Error())
-	}
-
-	g := new(strmatcher.MatcherGroup)
-	for _, d := range domains {
-		m, err := domainToMatcher(d)
-		if err != nil {
-			return nil, err
-		}
-		g.Add(m)
-	}
-
-	defer runtime.GC()
-	DomainMatcherCache[country] = &DomainMatcher{
-		matchers: g,
+	if DomainMatcherCache[country] == nil {
+		
+		return nil, fmt.Errorf("[GeoSite] Miss domain matcher cache for country: %s", country)
 	}
 	
 	return DomainMatcherCache[country], nil;
