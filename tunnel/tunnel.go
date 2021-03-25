@@ -15,6 +15,7 @@ import (
 	"github.com/Dreamacro/clash/context"
 	"github.com/Dreamacro/clash/log"
 	"github.com/Dreamacro/clash/tunnel/statistic"
+	"github.com/Dreamacro/clash/rules/router"
 )
 
 var (
@@ -59,6 +60,7 @@ func Rules() []C.Rule {
 func UpdateRules(newRules []C.Rule) {
 	configMux.Lock()
 	rules = newRules
+	router.UpdateGeoSiteRule(newRules)
 	configMux.Unlock()
 }
 
