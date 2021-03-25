@@ -30,7 +30,7 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	matcher, err := router.NewDomainMatcher(g.country)
 
 	if err != nil {
-		log.Errorln("Failed to create DomainMatcher: %s", err.Error())
+		log.Errorln("Failed to get geosite matcher for country: %s, base error: %s", g.country, err.Error())
 		return false
 	}
 	
@@ -38,7 +38,7 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	/**
 	if r {
 		elapsed := time.Since(start)
-		log.Infoln("Match domain \"%s\" spend time: %s", domain, elapsed)
+		log.Infoln("Match geosite domain \"%s\" spend time: %s", domain, elapsed)
 	} **/
 	
 	return r
