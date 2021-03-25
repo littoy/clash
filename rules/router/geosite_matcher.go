@@ -45,9 +45,9 @@ func UpdateGeoSiteRule(newRules []C.Rule) {
 	
 	defer runtime.GC()
 	for _, rule := range newRules {
-		if rule.Type == C.GEOSITE {
+		if rule.RuleType() == C.GEOSITE {
 			
-			country = rule.Payload
+			country = rule.Payload()
 			domains, err := loadGeositeWithAttr("geosite.dat", country)
 			if err != nil {
 				log.Errorln("Failed to load geosite: %s, base error: %s", country, err.Error())
