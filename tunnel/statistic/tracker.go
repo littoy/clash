@@ -137,8 +137,8 @@ func NewUDPTracker(conn C.PacketConn, manager *Manager, metadata *C.Metadata, ru
 	if rule != nil {
 		ut.trackerInfo.Rule = rule.RuleType().String()
 		ut.trackerInfo.RulePayload = rule.Payload()
-		if t.trackerInfo.Rule == "GeoSite" || t.trackerInfo.Rule == "GeoIP" {
-			t.trackerInfo.Rule = t.trackerInfo.Rule + "(" + rule.Payload() + ")" 
+		if ut.trackerInfo.Rule == "GeoSite" || ut.trackerInfo.Rule == "GeoIP" {
+			ut.trackerInfo.Rule = ut.trackerInfo.Rule + "(" + rule.Payload() + ")" 
 		}
 	}
 
