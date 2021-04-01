@@ -2,40 +2,33 @@ package router
 
 import (
 	"errors"
-	"io"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/Dreamacro/clash/common/buf"
 	C "github.com/Dreamacro/clash/constant"
+	"github.com/golang/protobuf/proto"
 )
 
-func loadGeoIP(code string) ([]*CIDR, error) {
+/*func loadGeoIP(code string) ([]*CIDR, error) {
 	return loadIP("geoip.dat", code)
-}
+}*/
 
 var (
 	FileCache = make(map[string][]byte)
-	IPCache   = make(map[string]*GeoIP)
+	//IPCache   = make(map[string]*GeoIP)
 	SiteCache = make(map[string]*GeoSite)
 )
 
-type FileReaderFunc func(path string) (io.ReadCloser, error)
-
-var NewFileReader FileReaderFunc = func(path string) (io.ReadCloser, error) {
-	return os.Open(path)
-}
-
 func ReadFile(path string) ([]byte, error) {
-	reader, err := NewFileReader(path)
+	reader, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer reader.Close()
 
-	return buf.ReadAllToBytes(reader)
+	return ioutil.ReadAll(reader)
 }
 
 func ReadAsset(file string) ([]byte, error) {
@@ -59,7 +52,7 @@ func loadFile(file string) ([]byte, error) {
 	return FileCache[file], nil
 }
 
-func loadIP(file, code string) ([]*CIDR, error) {
+/*func loadIP(file, code string) ([]*CIDR, error) {
 	index := file + ":" + code
 	if IPCache[index] == nil {
 		bs, err := loadFile(file)
@@ -80,7 +73,7 @@ func loadIP(file, code string) ([]*CIDR, error) {
 		//IPCache[index] = &geoip
 	}
 	return IPCache[index].Cidr, nil
-}
+}*/
 
 func loadSite(file, code string) ([]*Domain, error) {
 	index := file + ":" + code
@@ -97,7 +90,7 @@ func loadSite(file, code string) ([]*Domain, error) {
 		if err := proto.Unmarshal(bs, &geosite); err != nil {
 			return nil, errors.New("error unmarshal Site in " + file + ": " + code)
 		}
-		defer runtime.GC()         // or debug.FreeOSMemory()
+		defer runtime.GC() // or debug.FreeOSMemory()
 		//SiteCache[index] = &geosite
 		return geosite.Domain, nil // do not cache geosite
 		//SiteCache[index] = &geosite
