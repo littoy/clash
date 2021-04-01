@@ -1,12 +1,12 @@
 name: Go
-#on: [push, pull_request]
-on: 
-  workflow_dispatch:
-    inputs:
-      ssh:
-        description: 'SSH connection to Actions'
-        required: false
-        default: 'false'
+on: [push, pull_request]
+#on:
+#  workflow_dispatch:
+#    inputs:
+#      ssh:
+#        description: 'SSH connection to Actions'
+#        required: false
+#        default: 'false'
 jobs:
 
   build:
@@ -31,7 +31,7 @@ jobs:
       
       - name: SSH connection to Actions
         uses: P3TERX/ssh2actions@v1.0.0
-        if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
+        if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.head_commit.message, '[ssh]')
      
       - name: Manual download go mod, make it automatic generated go.sum
         run: |
@@ -73,3 +73,18 @@ jobs:
         with:
           files: bin/*
           draft: true
+
+      - name: Delete workflow runs
+        uses: GitRML/delete-workflow-runs@main
+        with:
+          retain_days: 1
+          keep_minimum_runs: 2
+
+      - name: Remove old Releases
+        uses: dev-drprasad/delete-older-releases@v0.1.0
+        if: startsWith(github.ref, 'refs/tags/') && !cancelled()
+        with:
+          keep_latest: 1
+          delete_tags: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
