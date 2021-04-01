@@ -38,6 +38,7 @@ type VmessOption struct {
 	AlterID        int               `proxy:"alterId"`
 	Cipher         string            `proxy:"cipher"`
 	TLS            bool              `proxy:"tls,omitempty"`
+	XTLS           bool              `proxy:"xtls,omitempty"`
 	UDP            bool              `proxy:"udp,omitempty"`
 	Network        string            `proxy:"network,omitempty"`
 	HTTPOpts       HTTPOptions       `proxy:"http-opts,omitempty"`
@@ -91,9 +92,9 @@ func (v *Vmess) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 		}
 		c, err = vmess.StreamWebsocketConn(c, wsOpts)
 	case "http":
-		// readability first, so just copy default TLS logic
+		host, _, _ := net.SplitHostPort(v.addr)
 		if v.option.TLS {
-			host, _, _ := net.SplitHostPort(v.addr)
+			// readability first, so just copy default TLS logic
 			tlsOpts := &vmess.TLSConfig{
 				Host:           host,
 				SkipCertVerify: v.option.SkipCertVerify,
@@ -108,9 +109,23 @@ func (v *Vmess) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 			if err != nil {
 				return nil, err
 			}
+		} else if v.option.XTLS {
+			xtlsOpts := &vmess.XTLSConfig{
+				Host:           host,
+				SkipCertVerify: v.option.SkipCertVerify,
+				SessionCache:   getXTLSClientSessionCache(),
+			}
+
+			if v.option.ServerName != "" {
+				xtlsOpts.Host = v.option.ServerName
+			}
+
+			c, err = vmess.StreamXTLSConn(c, xtlsOpts)
+			if err != nil {
+				return nil, err
+			}
 		}
 
-		host, _, _ := net.SplitHostPort(v.addr)
 		httpOpts := &vmess.HTTPConfig{
 			Host:    host,
 			Method:  v.option.HTTPOpts.Method,
@@ -121,20 +136,37 @@ func (v *Vmess) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 		c = vmess.StreamHTTPConn(c, httpOpts)
 	case "h2":
 		host, _, _ := net.SplitHostPort(v.addr)
-		tlsOpts := vmess.TLSConfig{
-			Host:           host,
-			SkipCertVerify: v.option.SkipCertVerify,
-			SessionCache:   getClientSessionCache(),
-			NextProtos:     []string{"h2"},
-		}
+		if v.option.XTLS {
+			xtlsOpts := &vmess.XTLSConfig{
+				Host:           host,
+				SkipCertVerify: v.option.SkipCertVerify,
+				SessionCache:   getXTLSClientSessionCache(),
+			}
 
-		if v.option.ServerName != "" {
-			tlsOpts.Host = v.option.ServerName
-		}
+			if v.option.ServerName != "" {
+				xtlsOpts.Host = v.option.ServerName
+			}
 
-		c, err = vmess.StreamTLSConn(c, &tlsOpts)
-		if err != nil {
-			return nil, err
+			c, err = vmess.StreamXTLSConn(c, xtlsOpts)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			tlsOpts := vmess.TLSConfig{
+				Host:           host,
+				SkipCertVerify: v.option.SkipCertVerify,
+				SessionCache:   getClientSessionCache(),
+				NextProtos:     []string{"h2"},
+			}
+
+			if v.option.ServerName != "" {
+				tlsOpts.Host = v.option.ServerName
+			}
+
+			c, err = vmess.StreamTLSConn(c, &tlsOpts)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		h2Opts := &vmess.H2Config{
@@ -160,6 +192,22 @@ func (v *Vmess) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 			}
 
 			c, err = vmess.StreamTLSConn(c, tlsOpts)
+		} else if v.option.XTLS {
+			host, _, _ := net.SplitHostPort(v.addr)
+			xtlsOpts := &vmess.XTLSConfig{
+				Host:           host,
+				SkipCertVerify: v.option.SkipCertVerify,
+				SessionCache:   getXTLSClientSessionCache(),
+			}
+
+			if v.option.ServerName != "" {
+				xtlsOpts.Host = v.option.ServerName
+			}
+
+			c, err = vmess.StreamXTLSConn(c, xtlsOpts)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

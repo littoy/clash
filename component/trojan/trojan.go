@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/Dreamacro/clash/component/socks5"
+	xtls "github.com/xtls/go"
 )
 
 const (
@@ -34,11 +35,13 @@ var (
 )
 
 type Option struct {
-	Password           string
-	ALPN               []string
-	ServerName         string
-	SkipCertVerify     bool
-	ClientSessionCache tls.ClientSessionCache
+	Password               string
+	ALPN                   []string
+	ServerName             string
+	SkipCertVerify         bool
+	XTLS                   bool
+	ClientSessionCache     tls.ClientSessionCache
+	XTLSClientSessionCache xtls.ClientSessionCache
 }
 
 type Trojan struct {
@@ -52,20 +55,41 @@ func (t *Trojan) StreamConn(conn net.Conn) (net.Conn, error) {
 		alpn = t.option.ALPN
 	}
 
-	tlsConfig := &tls.Config{
-		NextProtos:         alpn,
-		MinVersion:         tls.VersionTLS12,
-		InsecureSkipVerify: t.option.SkipCertVerify,
-		ServerName:         t.option.ServerName,
-		ClientSessionCache: t.option.ClientSessionCache,
-	}
+	if t.option.XTLS {
+		xtlsConfig := &xtls.Config{
+			NextProtos:         alpn,
+			MinVersion:         tls.VersionTLS12,
+			InsecureSkipVerify: t.option.SkipCertVerify,
+			ServerName:         t.option.ServerName,
+			ClientSessionCache: t.option.XTLSClientSessionCache,
+		}
 
-	tlsConn := tls.Client(conn, tlsConfig)
-	if err := tlsConn.Handshake(); err != nil {
-		return nil, err
-	}
+		xtlsConn := xtls.Client(conn, xtlsConfig)
+		xtlsConn.RPRX = true
+		xtlsConn.SHOW = true
+		xtlsConn.MARK = "XTLS"
+		xtlsConn.DirectMode = true
 
-	return tlsConn, nil
+		if err := xtlsConn.Handshake(); err != nil {
+			return nil, err
+		}
+		return xtlsConn, nil
+	} else {
+		tlsConfig := &tls.Config{
+			NextProtos:         alpn,
+			MinVersion:         tls.VersionTLS12,
+			InsecureSkipVerify: t.option.SkipCertVerify,
+			ServerName:         t.option.ServerName,
+			ClientSessionCache: t.option.ClientSessionCache,
+		}
+
+		tlsConn := tls.Client(conn, tlsConfig)
+		if err := tlsConn.Handshake(); err != nil {
+			return nil, err
+		}
+
+		return tlsConn, nil
+	}
 }
 
 func (t *Trojan) WriteHeader(w io.Writer, command Command, socks5Addr []byte) error {
