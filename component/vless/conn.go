@@ -3,7 +3,6 @@ package vless
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -12,7 +11,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-var (
+/*var (
 
 	//proto.Marshal(addons) bytes for Flow: "xtls-rprx-direct"
 	addOnBytes, _ = hex.DecodeString("120a1078746c732d727072782d646972656374")
@@ -21,7 +20,7 @@ var (
 	//proto.Marshal(addons) bytes for Flow: ""
 	//addOnEmptyBytes, _ = hex.DecodeString("00")
 	//addOnEmptyBytesLen  = len(addOnEmptyBytes)
-)
+)*/
 
 type Conn struct {
 	net.Conn
@@ -56,9 +55,9 @@ func (vc *Conn) sendRequest() error {
 		//buf.Write(addOnEmptyBytes)
 		buf.WriteByte(CommandUDP)
 	} else {
-		//buf.WriteByte(0)         // addon data length. 0 means no addon data
-		buf.WriteByte(byte(addOnBytesLen))
-		buf.Write(addOnBytes)
+		buf.WriteByte(0) // addon data length. 0 means no addon data
+		//buf.WriteByte(byte(addOnBytesLen))
+		//buf.Write(addOnBytes)
 		buf.WriteByte(CommandTCP)
 	}
 

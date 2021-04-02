@@ -35,7 +35,6 @@ type TrojanOption struct {
 	SNI            string      `proxy:"sni,omitempty"`
 	SkipCertVerify bool        `proxy:"skip-cert-verify,omitempty"`
 	UDP            bool        `proxy:"udp,omitempty"`
-	XTLS           bool        `proxy:"xtls,omitempty"`
 	Network        string      `proxy:"network,omitempty"`
 	GrpcOpts       GrpcOptions `proxy:"grpc-opts,omitempty"`
 }
@@ -136,10 +135,8 @@ func NewTrojan(option TrojanOption) (*Trojan, error) {
 		Password:   option.Password,
 		ALPN:       option.ALPN,
 		ServerName: option.Server,
-		//SkipCertVerify:         option.SkipCertVerify,
-		XTLS:                   option.XTLS,
-		ClientSessionCache:     getClientSessionCache(),
-		XTLSClientSessionCache: getXTLSClientSessionCache(),
+		//SkipCertVerify:     option.SkipCertVerify,
+		ClientSessionCache: getClientSessionCache(),
 	}
 
 	if option.SNI != "" {

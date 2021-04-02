@@ -17,7 +17,6 @@ import (
 	"github.com/Dreamacro/clash/component/vless"
 	"github.com/Dreamacro/clash/component/vmess"
 	C "github.com/Dreamacro/clash/constant"
-	xtls "github.com/xtls/go"
 )
 
 const (
@@ -44,7 +43,6 @@ type VlessOption struct {
 	UDP            bool              `proxy:"udp,omitempty"`
 	ALPN           []string          `proxy:"alpn,omitempty"`
 	TLS            bool              `proxy:"tls,omitempty"`
-	XTLS           bool              `proxy:"xtls,omitempty"`
 	Network        string            `proxy:"network,omitempty"`
 	WSPath         string            `proxy:"ws-path,omitempty"`
 	WSHeaders      map[string]string `proxy:"ws-headers,omitempty"`
@@ -74,7 +72,7 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 		if v.option.TLS {
 			wsOpts.TLS = true
 			wsOpts.SessionCache = getClientSessionCache()
-			wsOpts.SkipCertVerify = v.option.SkipCertVerify
+			//wsOpts.SkipCertVerify = v.option.SkipCertVerify
 			wsOpts.ServerName = v.option.ServerName
 		}
 		c, err = vmess.StreamWebsocketConn(c, wsOpts)
@@ -85,52 +83,25 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 		}
 
 		host, _, _ := net.SplitHostPort(v.addr)
-		if v.option.XTLS {
-			xtlsConfig := &xtls.Config{
-				NextProtos: alpn,
-				MinVersion: tls.VersionTLS12,
-				//InsecureSkipVerify: v.option.SkipCertVerify,
-				ServerName:         host,
-				ClientSessionCache: getXTLSClientSessionCache(),
-			}
 
-			if v.option.ServerName != "" {
-				xtlsConfig.ServerName = v.option.ServerName
-			}
-
-			xtlsConn := xtls.Client(c, xtlsConfig)
-
-			if metadata.NetWork == C.TCP {
-				xtlsConn.RPRX = true
-				xtlsConn.SHOW = true
-				xtlsConn.MARK = "XTLS"
-				xtlsConn.DirectMode = true
-			}
-
-			if err := xtlsConn.Handshake(); err != nil {
-				return nil, err
-			}
-			c = xtlsConn
-		} else {
-			tlsConfig := &tls.Config{
-				NextProtos: alpn,
-				MinVersion: tls.VersionTLS12,
-				//InsecureSkipVerify: v.option.SkipCertVerify,
-				ServerName:         host,
-				ClientSessionCache: getClientSessionCache(),
-			}
-
-			if v.option.ServerName != "" {
-				tlsConfig.ServerName = v.option.ServerName
-			}
-
-			tlsConn := tls.Client(c, tlsConfig)
-			if err := tlsConn.Handshake(); err != nil {
-				return nil, err
-			}
-
-			c = tlsConn
+		tlsConfig := &tls.Config{
+			NextProtos: alpn,
+			MinVersion: tls.VersionTLS12,
+			//InsecureSkipVerify: v.option.SkipCertVerify,
+			ServerName:         host,
+			ClientSessionCache: getClientSessionCache(),
 		}
+
+		if v.option.ServerName != "" {
+			tlsConfig.ServerName = v.option.ServerName
+		}
+
+		tlsConn := tls.Client(c, tlsConfig)
+		if err := tlsConn.Handshake(); err != nil {
+			return nil, err
+		}
+
+		c = tlsConn
 	}
 
 	if err != nil {
@@ -186,7 +157,7 @@ func NewVless(option VlessOption) (*Vless, error) {
 			name: option.Name,
 			addr: net.JoinHostPort(option.Server, strconv.Itoa(option.Port)),
 			tp:   C.Vless,
-			udp:  true,
+			udp:  option.UDP,
 		},
 		client: client,
 		option: &option,

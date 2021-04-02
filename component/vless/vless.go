@@ -36,7 +36,6 @@ type Config struct {
 	Security string
 	Port     string
 	HostName string
-	IsAead   bool
 }
 
 // Client is vless connection generator
