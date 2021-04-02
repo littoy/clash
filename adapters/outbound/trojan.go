@@ -133,10 +133,10 @@ func NewTrojan(option TrojanOption) (*Trojan, error) {
 	addr := net.JoinHostPort(option.Server, strconv.Itoa(option.Port))
 
 	tOption := &trojan.Option{
-		Password:               option.Password,
-		ALPN:                   option.ALPN,
-		ServerName:             option.Server,
-		SkipCertVerify:         option.SkipCertVerify,
+		Password:   option.Password,
+		ALPN:       option.ALPN,
+		ServerName: option.Server,
+		//SkipCertVerify:         option.SkipCertVerify,
 		XTLS:                   option.XTLS,
 		ClientSessionCache:     getClientSessionCache(),
 		XTLSClientSessionCache: getXTLSClientSessionCache(),
@@ -167,9 +167,9 @@ func NewTrojan(option TrojanOption) (*Trojan, error) {
 		}
 
 		tlsConfig := &tls.Config{
-			NextProtos:         option.ALPN,
-			MinVersion:         tls.VersionTLS12,
-			InsecureSkipVerify: tOption.SkipCertVerify,
+			NextProtos: option.ALPN,
+			MinVersion: tls.VersionTLS12,
+			//InsecureSkipVerify: tOption.SkipCertVerify,
 			ServerName:         tOption.ServerName,
 			ClientSessionCache: getClientSessionCache(),
 		}

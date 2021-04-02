@@ -87,9 +87,9 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 		host, _, _ := net.SplitHostPort(v.addr)
 		if v.option.XTLS {
 			xtlsConfig := &xtls.Config{
-				NextProtos:         alpn,
-				MinVersion:         tls.VersionTLS12,
-				InsecureSkipVerify: v.option.SkipCertVerify,
+				NextProtos: alpn,
+				MinVersion: tls.VersionTLS12,
+				//InsecureSkipVerify: v.option.SkipCertVerify,
 				ServerName:         host,
 				ClientSessionCache: getXTLSClientSessionCache(),
 			}
@@ -99,10 +99,10 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 			}
 
 			xtlsConn := xtls.Client(c, xtlsConfig)
-			xtlsConn.RPRX = true
-			xtlsConn.SHOW = true
-			xtlsConn.MARK = "XTLS"
-			xtlsConn.DirectMode = true
+			//xtlsConn.RPRX = true
+			//xtlsConn.SHOW = true
+			//xtlsConn.MARK = "XTLS"
+			//xtlsConn.DirectMode = true
 
 			if err := xtlsConn.Handshake(); err != nil {
 				return nil, err
@@ -110,9 +110,9 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 			c = xtlsConn
 		} else {
 			tlsConfig := &tls.Config{
-				NextProtos:         alpn,
-				MinVersion:         tls.VersionTLS12,
-				InsecureSkipVerify: v.option.SkipCertVerify,
+				NextProtos: alpn,
+				MinVersion: tls.VersionTLS12,
+				//InsecureSkipVerify: v.option.SkipCertVerify,
 				ServerName:         host,
 				ClientSessionCache: getClientSessionCache(),
 			}
