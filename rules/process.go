@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -23,6 +24,9 @@ func (ps *Process) RuleType() C.RuleType {
 }
 
 func (ps *Process) Match(metadata *C.Metadata) bool {
+	if runtime.GOOS != "darwin" {
+		return false
+	}
 	key := fmt.Sprintf("%s:%s:%s", metadata.NetWork.String(), metadata.SrcIP.String(), metadata.SrcPort)
 	cached, hit := processCache.Get(key)
 	if !hit {
