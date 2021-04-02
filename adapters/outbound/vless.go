@@ -99,10 +99,13 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 			}
 
 			xtlsConn := xtls.Client(c, xtlsConfig)
-			//xtlsConn.RPRX = true
-			//xtlsConn.SHOW = true
-			//xtlsConn.MARK = "XTLS"
-			//xtlsConn.DirectMode = true
+
+			if metadata.NetWork == C.TCP {
+				xtlsConn.RPRX = true
+				xtlsConn.SHOW = true
+				xtlsConn.MARK = "XTLS"
+				xtlsConn.DirectMode = true
+			}
 
 			if err := xtlsConn.Handshake(); err != nil {
 				return nil, err
@@ -134,7 +137,7 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 		return nil, err
 	}
 
-	return v.client.StreamConn(c, parseVmessAddr(metadata))
+	return v.client.StreamConn(c, parseVlessAddr(metadata))
 }
 
 func (v *Vless) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn, error) {
@@ -279,4 +282,32 @@ func (c *vlessPacketConn) ReadFrom(b []byte) (int, net.Addr, error) {
 		c.remain = remain
 	}
 	return n, c.rAddr, err
+}
+
+func parseVlessAddr(metadata *C.Metadata) *vless.DstAddr {
+	var addrType byte
+	var addr []byte
+	switch metadata.AddrType {
+	case C.AtypIPv4:
+		addrType = byte(vless.AtypIPv4)
+		addr = make([]byte, net.IPv4len)
+		copy(addr[:], metadata.DstIP.To4())
+	case C.AtypIPv6:
+		addrType = byte(vless.AtypIPv6)
+		addr = make([]byte, net.IPv6len)
+		copy(addr[:], metadata.DstIP.To16())
+	case C.AtypDomainName:
+		addrType = byte(vless.AtypDomainName)
+		addr = make([]byte, len(metadata.Host)+1)
+		addr[0] = byte(len(metadata.Host))
+		copy(addr[1:], []byte(metadata.Host))
+	}
+
+	port, _ := strconv.Atoi(metadata.DstPort)
+	return &vless.DstAddr{
+		UDP:      metadata.NetWork == C.UDP,
+		AddrType: addrType,
+		Addr:     addr,
+		Port:     uint(port),
+	}
 }

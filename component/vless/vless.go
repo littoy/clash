@@ -3,11 +3,41 @@ package vless
 import (
 	"net"
 
-	"github.com/Dreamacro/clash/component/vmess"
 	"github.com/gofrs/uuid"
 )
 
 const Version byte = 0 // protocol version. preview version is 0
+
+// Command types
+const (
+	CommandTCP byte = 1
+	CommandUDP byte = 2
+)
+
+// Addr types
+const (
+	AtypIPv4       byte = 1
+	AtypDomainName byte = 2
+	AtypIPv6       byte = 3
+)
+
+// DstAddr store destination address
+type DstAddr struct {
+	UDP      bool
+	AddrType byte
+	Addr     []byte
+	Port     uint
+}
+
+// Config of vless
+type Config struct {
+	UUID     string
+	AlterID  uint16
+	Security string
+	Port     string
+	HostName string
+	IsAead   bool
+}
 
 // Client is vless connection generator
 type Client struct {
@@ -15,7 +45,7 @@ type Client struct {
 }
 
 // StreamConn return a Conn with net.Conn and DstAddr
-func (c *Client) StreamConn(conn net.Conn, dst *vmess.DstAddr) (net.Conn, error) {
+func (c *Client) StreamConn(conn net.Conn, dst *DstAddr) (net.Conn, error) {
 	return newConn(conn, c.uuid, dst)
 }
 

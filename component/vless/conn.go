@@ -3,18 +3,29 @@ package vless
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"io"
 	"io/ioutil"
 	"net"
 
-	"github.com/Dreamacro/clash/component/vmess"
 	"github.com/gofrs/uuid"
+)
+
+var (
+
+	//proto.Marshal(addons) bytes for Flow: "xtls-rprx-direct"
+	addOnBytes, _ = hex.DecodeString("120a1078746c732d727072782d646972656374")
+	addOnBytesLen = len(addOnBytes)
+
+	//proto.Marshal(addons) bytes for Flow: ""
+	//addOnEmptyBytes, _ = hex.DecodeString("00")
+	//addOnEmptyBytesLen  = len(addOnEmptyBytes)
 )
 
 type Conn struct {
 	net.Conn
-	dst *vmess.DstAddr
+	dst *DstAddr
 	id  *uuid.UUID
 
 	received bool
@@ -37,13 +48,18 @@ func (vc *Conn) sendRequest() error {
 
 	buf.WriteByte(Version)   // protocol version
 	buf.Write(vc.id.Bytes()) // 16 bytes of uuid
-	buf.WriteByte(0)         // addon data length. 0 means no addon data
 
 	// command
 	if vc.dst.UDP {
-		buf.WriteByte(vmess.CommandUDP)
+		buf.WriteByte(0) // addon data length. 0 means no addon data
+		//buf.WriteByte(byte(addOnEmptyBytesLen))
+		//buf.Write(addOnEmptyBytes)
+		buf.WriteByte(CommandUDP)
 	} else {
-		buf.WriteByte(vmess.CommandTCP)
+		//buf.WriteByte(0)         // addon data length. 0 means no addon data
+		buf.WriteByte(byte(addOnBytesLen))
+		buf.Write(addOnBytes)
+		buf.WriteByte(CommandTCP)
 	}
 
 	// Port AddrType Addr
@@ -81,7 +97,7 @@ func (vc *Conn) recvResponse() error {
 }
 
 // newConn return a Conn instance
-func newConn(conn net.Conn, id *uuid.UUID, dst *vmess.DstAddr) (*Conn, error) {
+func newConn(conn net.Conn, id *uuid.UUID, dst *DstAddr) (*Conn, error) {
 	c := &Conn{
 		Conn: conn,
 		id:   id,
