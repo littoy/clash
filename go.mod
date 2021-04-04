@@ -8,7 +8,6 @@ require (
 	github.com/go-chi/cors v1.2.0
 	github.com/go-chi/render v1.0.1
 	github.com/gofrs/uuid v4.0.0+incompatible
-	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/websocket v1.4.2
 	github.com/miekg/dns v1.1.41
 	github.com/oschwald/geoip2-golang v1.5.0
@@ -19,6 +18,10 @@ require (
 	golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210402192133-700132347e07
-	google.golang.org/protobuf v1.26.0
 	gopkg.in/yaml.v2 v2.4.0
+	github.com/golang/protobuf v1.5.2
+	google.golang.org/protobuf v1.26.0
+	gvisor.dev/gvisor v0.0.0-00010101000000-000000000000
 )
+
+replace gvisor.dev/gvisor => github.com/comzyh/gvisor v0.0.0-20210301140817-31d323141418

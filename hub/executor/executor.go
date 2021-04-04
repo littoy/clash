@@ -93,6 +93,7 @@ func GetGeneral() *config.General {
 			RedirPort:      ports.RedirPort,
 			TProxyPort:     ports.TProxyPort,
 			MixedPort:      ports.MixedPort,
+			Tun:            P.Tun(),
 			Authentication: authenticator,
 			AllowLan:       P.AllowLan(),
 			BindAddress:    P.BindAddress(),
@@ -205,6 +206,11 @@ func updateGeneral(general *config.General, force bool) {
 	if err := P.ReCreateMixed(general.MixedPort); err != nil {
 		log.Errorln("Start Mixed(http and socks5) server error: %s", err.Error())
 	}
+
+	if err := P.ReCreateTun(general.Tun); err != nil {
+		log.Errorln("Start Tun interface error: %s", err.Error())
+	}
+
 }
 
 func updateUsers(users []auth.AuthUser) {
