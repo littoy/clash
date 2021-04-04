@@ -9,13 +9,11 @@ require (
 	github.com/go-chi/render v1.0.1
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/golang/protobuf v1.5.2
-	//github.com/google/go-cmp v0.5.5
 	github.com/gorilla/websocket v1.4.2
 	github.com/miekg/dns v1.1.40
 	github.com/oschwald/geoip2-golang v1.5.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
-	//github.com/xtls/go v0.0.0-20201118062508-3632bf3b7499
 	go.uber.org/atomic v1.7.0
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
 	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
