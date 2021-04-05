@@ -84,7 +84,7 @@ type Tun struct {
 	Enable         bool   `yaml:"enable" json:"enable"`
 	DeviceURL      string `yaml:"device-url" json:"device-url"`
 	DNSListen      string `yaml:"dns-listen" json:"dns-listen"`
-	MacOSAutoRoute bool   `yaml:"macOS-auto-route json:"macOS-auto-route"`
+	MacOSAutoRoute bool   `yaml:"macOS-auto-route" json:"macOS-auto-route"`
 }
 
 // Experimental config
