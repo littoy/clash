@@ -3,6 +3,8 @@ package proxy
 import (
 	"fmt"
 	"net"
+	"os/exec"
+	"runtime"
 	"strconv"
 	"sync"
 
@@ -66,9 +68,10 @@ func Tun() config.Tun {
 		return config.Tun{}
 	}
 	return config.Tun{
-		Enable:    true,
-		DeviceURL: tunAdapter.DeviceURL(),
-		DNSListen: tunAdapter.DNSListen(),
+		Enable:         true,
+		DeviceURL:      tunAdapter.DeviceURL(),
+		DNSListen:      tunAdapter.DNSListen(),
+		MacOSAutoRoute: true,
 	}
 }
 
@@ -298,6 +301,9 @@ func ReCreateTun(conf config.Tun) error {
 		}
 		tunAdapter.Close()
 		tunAdapter = nil
+		if conf.MacOSAutoRoute {
+			removeMacOSAutoRoute()
+		}
 	}
 	if !enable {
 		return nil
@@ -310,7 +316,52 @@ func ReCreateTun(conf config.Tun) error {
 	if resolver.DefaultResolver != nil {
 		return tunAdapter.ReCreateDNSServer(resolver.DefaultResolver.(*dns.Resolver), resolver.DefaultHostMapper.(*dns.ResolverEnhancer), conf.DNSListen)
 	}
+	if conf.MacOSAutoRoute {
+		setMacOSAutoRoute()
+	}
 	return nil
+}
+
+func setMacOSAutoRoute() {
+	if runtime.GOOS != "darwin" {
+		addSystemRoute("1")
+		addSystemRoute("2/7")
+		addSystemRoute("4/6")
+		addSystemRoute("8/5")
+		addSystemRoute("16/4")
+		addSystemRoute("32/3")
+		addSystemRoute("64/2")
+		addSystemRoute("128.0/1")
+		addSystemRoute("198.18.0/16")
+	}
+}
+
+func removeMacOSAutoRoute() {
+	if runtime.GOOS != "darwin" {
+		delSystemRoute("1")
+		delSystemRoute("2/7")
+		delSystemRoute("4/6")
+		delSystemRoute("8/5")
+		delSystemRoute("16/4")
+		delSystemRoute("32/3")
+		delSystemRoute("64/2")
+		delSystemRoute("128.0/1")
+		delSystemRoute("198.18.0/16")
+	}
+}
+
+func addSystemRoute(net string) {
+	cmd := exec.Command("route", "add", "-net", net, "198.18.0.1")
+	if err := cmd.Run(); err != nil {
+		log.Errorln("[Add system route]Failed to add system route: %s", cmd.String())
+	}
+}
+
+func delSystemRoute(net string) {
+	cmd := exec.Command("route", "delete", "-net", net, "198.18.0.1")
+	if err := cmd.Run(); err != nil {
+		log.Errorln("[Delete system route]Failed to delete system route: %s", cmd.String())
+	}
 }
 
 // GetPorts return the ports of proxy servers
