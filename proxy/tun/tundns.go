@@ -265,6 +265,6 @@ func (t *tunAdapter) ReCreateDNSServer(resolver *dns.Resolver, mapper *dns.Resol
 		return err
 	}
 	t.dnsserver = server
-	log.Infoln("Tun DNS server listening at: %s", addr)
+	log.Infoln("Tun DNS server listening at: %s, fake ip enabled: %v", addr, mapper.FakeIPEnabled())
 	return nil
 }

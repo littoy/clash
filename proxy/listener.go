@@ -313,17 +313,20 @@ func ReCreateTun(conf config.Tun) error {
 	if err != nil {
 		return err
 	}
-	if resolver.DefaultResolver != nil {
-		return tunAdapter.ReCreateDNSServer(resolver.DefaultResolver.(*dns.Resolver), resolver.DefaultHostMapper.(*dns.ResolverEnhancer), conf.DNSListen)
-	}
+
 	if conf.MacOSAutoRoute {
 		setMacOSAutoRoute()
+	}
+
+	if resolver.DefaultResolver != nil {
+		return tunAdapter.ReCreateDNSServer(resolver.DefaultResolver.(*dns.Resolver), resolver.DefaultHostMapper.(*dns.ResolverEnhancer), conf.DNSListen)
 	}
 	return nil
 }
 
 func setMacOSAutoRoute() {
-	if runtime.GOOS != "darwin" {
+	if runtime.GOOS == "darwin" {
+		log.Infoln("[MacOS auto route]Add system route.")
 		addSystemRoute("1")
 		addSystemRoute("2/7")
 		addSystemRoute("4/6")
@@ -337,7 +340,8 @@ func setMacOSAutoRoute() {
 }
 
 func removeMacOSAutoRoute() {
-	if runtime.GOOS != "darwin" {
+	if runtime.GOOS == "darwin" {
+		log.Infoln("[MacOS auto route]Remove system route.")
 		delSystemRoute("1")
 		delSystemRoute("2/7")
 		delSystemRoute("4/6")
@@ -353,15 +357,16 @@ func removeMacOSAutoRoute() {
 func addSystemRoute(net string) {
 	cmd := exec.Command("route", "add", "-net", net, "198.18.0.1")
 	if err := cmd.Run(); err != nil {
-		log.Errorln("[Add system route]Failed to add system route: %s", cmd.String())
+		log.Errorln("[MacOS auto route]Failed to add system route: %s, cmd: %s", err.Error(), cmd.String())
 	}
 }
 
 func delSystemRoute(net string) {
 	cmd := exec.Command("route", "delete", "-net", net, "198.18.0.1")
-	if err := cmd.Run(); err != nil {
-		log.Errorln("[Delete system route]Failed to delete system route: %s", cmd.String())
-	}
+	_ = cmd.Run()
+	//if err := cmd.Run(); err != nil {
+	//	log.Errorln("[MacOS auto route]Failed to delete system route: %s, cmd: %s", err.Error(), cmd.String())
+	//}
 }
 
 // GetPorts return the ports of proxy servers
