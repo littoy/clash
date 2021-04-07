@@ -190,7 +190,7 @@ func UnmarshalRawConfig(buf []byte) (*RawConfig, error) {
 			},
 			DefaultNameserver: []string{
 				"114.114.114.114",
-				"8.8.8.8",
+				"223.5.5.5",
 			},
 		},
 		Profile: Profile{
