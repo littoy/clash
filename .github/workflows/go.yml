@@ -35,9 +35,9 @@ jobs:
      
       - name: Manual download go mod, make it automatic generated go.sum
         run: |
-          rm go.sum
+          rm go.sum || true
           go mod download
-          cat go.sum
+          #cat go.sum
           
       - name: Get dependencies, run test and static check
         run: |
