@@ -27,7 +27,7 @@ type ShadowSocksR struct {
 type ShadowSocksROption struct {
 	Name           string `proxy:"name"`
 	Server         string `proxy:"server"`
-	PingServer     string `proxy:"pingServer,omitempty"`
+	PingServer     string `proxy:"ping-server,omitempty"`
 	Port           int    `proxy:"port"`
 	Password       string `proxy:"password"`
 	Cipher         string `proxy:"cipher"`
@@ -36,8 +36,8 @@ type ShadowSocksROption struct {
 	Protocol       string `proxy:"protocol"`
 	ProtocolParam  string `proxy:"protocol-param,omitempty"`
 	UDP            bool   `proxy:"udp,omitempty"`
-	timeout        int    `proxy:"timeout,omitempty"`
-	forbidDuration int    `proxy:"forbidDuration,omitempty"`
+	Timeout        int    `proxy:"timeout,omitempty"`
+	ForbidDuration int    `proxy:"forbid-duration,omitempty"`
 }
 
 func (ssr *ShadowSocksR) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
@@ -100,8 +100,8 @@ func (ssr *ShadowSocksR) MarshalJSON() ([]byte, error) {
 func NewShadowSocksR(option ShadowSocksROption) (*ShadowSocksR, error) {
 	addr := net.JoinHostPort(option.Server, strconv.Itoa(option.Port))
 	pingAddr := option.PingServer
-	timeout := option.timeout
-	forbidDuration := option.forbidDuration
+	timeout := option.Timeout
+	forbidDuration := option.ForbidDuration
 	cipher := option.Cipher
 	password := option.Password
 	coreCiph, err := core.PickCipher(cipher, nil, password)

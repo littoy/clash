@@ -27,15 +27,15 @@ type Socks5 struct {
 type Socks5Option struct {
 	Name           string `proxy:"name"`
 	Server         string `proxy:"server"`
-	PingServer     string `proxy:"pingServer,omitempty"`
+	PingServer     string `proxy:"ping-server,omitempty"`
 	Port           int    `proxy:"port"`
 	UserName       string `proxy:"username,omitempty"`
 	Password       string `proxy:"password,omitempty"`
 	TLS            bool   `proxy:"tls,omitempty"`
 	UDP            bool   `proxy:"udp,omitempty"`
 	SkipCertVerify bool   `proxy:"skip-cert-verify,omitempty"`
-	timeout        int    `proxy:"timeout,omitempty"`
-	forbidDuration int    `proxy:"forbidDuration,omitempty"`
+	Timeout        int    `proxy:"timeout,omitempty"`
+	ForbidDuration int    `proxy:"forbid-duration,omitempty"`
 }
 
 func (ss *Socks5) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
@@ -150,8 +150,8 @@ func NewSocks5(option Socks5Option) *Socks5 {
 		}
 	}
 	pingAddr := option.PingServer
-	timeout := option.timeout
-	forbidDuration := option.forbidDuration
+	timeout := option.Timeout
+	forbidDuration := option.ForbidDuration
 	return &Socks5{
 		Base: &Base{
 			name:           option.Name,

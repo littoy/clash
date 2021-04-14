@@ -33,7 +33,7 @@ type Vmess struct {
 type VmessOption struct {
 	Name           string            `proxy:"name"`
 	Server         string            `proxy:"server"`
-	PingServer     string            `proxy:"pingServer,omitempty"`
+	PingServer     string            `proxy:"ping-server,omitempty"`
 	Port           int               `proxy:"port"`
 	UUID           string            `proxy:"uuid"`
 	AlterID        int               `proxy:"alterId"`
@@ -48,8 +48,8 @@ type VmessOption struct {
 	WSHeaders      map[string]string `proxy:"ws-headers,omitempty"`
 	SkipCertVerify bool              `proxy:"skip-cert-verify,omitempty"`
 	ServerName     string            `proxy:"servername,omitempty"`
-	timeout        int               `proxy:"timeout,omitempty"`
-	forbidDuration int               `proxy:"forbidDuration,omitempty"`
+	Timeout        int               `proxy:"timeout,omitempty"`
+	ForbidDuration int               `proxy:"forbid-duration,omitempty"`
 }
 
 type HTTPOptions struct {
@@ -262,8 +262,8 @@ func NewVmess(option VmessOption) (*Vmess, error) {
 		}
 	}
 	pingAddr := option.PingServer
-	timeout := option.timeout
-	forbidDuration := option.forbidDuration
+	timeout := option.Timeout
+	forbidDuration := option.ForbidDuration
 	v := &Vmess{
 		Base: &Base{
 			name:           option.Name,

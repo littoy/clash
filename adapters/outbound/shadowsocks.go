@@ -31,15 +31,15 @@ type ShadowSocks struct {
 type ShadowSocksOption struct {
 	Name           string                 `proxy:"name"`
 	Server         string                 `proxy:"server"`
-	PingServer     string                 `proxy:"pingServer,omitempty"`
+	PingServer     string                 `proxy:"ping-server,omitempty"`
 	Port           int                    `proxy:"port"`
 	Password       string                 `proxy:"password"`
 	Cipher         string                 `proxy:"cipher"`
 	UDP            bool                   `proxy:"udp,omitempty"`
 	Plugin         string                 `proxy:"plugin,omitempty"`
 	PluginOpts     map[string]interface{} `proxy:"plugin-opts,omitempty"`
-	timeout        int                    `proxy:"timeout,omitempty"`
-	forbidDuration int                    `proxy:"forbidDuration,omitempty"`
+	Timeout        int                    `proxy:"timeout,omitempty"`
+	ForbidDuration int                    `proxy:"forbid-duration,omitempty"`
 }
 
 type simpleObfsOption struct {
@@ -114,8 +114,8 @@ func (ss *ShadowSocks) MarshalJSON() ([]byte, error) {
 func NewShadowSocks(option ShadowSocksOption) (*ShadowSocks, error) {
 	addr := net.JoinHostPort(option.Server, strconv.Itoa(option.Port))
 	pingAddr := option.PingServer
-	timeout := option.timeout
-	forbidDuration := option.forbidDuration
+	timeout := option.Timeout
+	forbidDuration := option.ForbidDuration
 	cipher := option.Cipher
 	password := option.Password
 	ciph, err := core.PickCipher(cipher, nil, password)
