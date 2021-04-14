@@ -247,6 +247,7 @@ func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, er
 			panic(err)
 		}
 		pinger.Count = 5
+		pinger.Interval = 350 * time.Millisecond
 		err = pinger.Run() // Blocks until finished.
 		if err != nil {
 			panic(err)
