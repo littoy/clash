@@ -29,15 +29,17 @@ type ShadowSocks struct {
 }
 
 type ShadowSocksOption struct {
-	Name       string                 `proxy:"name"`
-	Server     string                 `proxy:"server"`
-	PingServer string                 `proxy:"pingServer,omitempty"`
-	Port       int                    `proxy:"port"`
-	Password   string                 `proxy:"password"`
-	Cipher     string                 `proxy:"cipher"`
-	UDP        bool                   `proxy:"udp,omitempty"`
-	Plugin     string                 `proxy:"plugin,omitempty"`
-	PluginOpts map[string]interface{} `proxy:"plugin-opts,omitempty"`
+	Name           string                 `proxy:"name"`
+	Server         string                 `proxy:"server"`
+	PingServer     string                 `proxy:"pingServer,omitempty"`
+	Port           int                    `proxy:"port"`
+	Password       string                 `proxy:"password"`
+	Cipher         string                 `proxy:"cipher"`
+	UDP            bool                   `proxy:"udp,omitempty"`
+	Plugin         string                 `proxy:"plugin,omitempty"`
+	PluginOpts     map[string]interface{} `proxy:"plugin-opts,omitempty"`
+	timeout        int                    `proxy:"timeout,omitempty"`
+	forbidDuration int                    `proxy:"forbidDuration,omitempty"`
 }
 
 type simpleObfsOption struct {
@@ -112,6 +114,8 @@ func (ss *ShadowSocks) MarshalJSON() ([]byte, error) {
 func NewShadowSocks(option ShadowSocksOption) (*ShadowSocks, error) {
 	addr := net.JoinHostPort(option.Server, strconv.Itoa(option.Port))
 	pingAddr := option.PingServer
+	timeout := option.timeout
+	forbidDuration := option.forbidDuration
 	cipher := option.Cipher
 	password := option.Password
 	ciph, err := core.PickCipher(cipher, nil, password)
@@ -161,11 +165,13 @@ func NewShadowSocks(option ShadowSocksOption) (*ShadowSocks, error) {
 
 	return &ShadowSocks{
 		Base: &Base{
-			name:     option.Name,
-			addr:     addr,
-			pingAddr: pingAddr,
-			tp:       C.Shadowsocks,
-			udp:      option.UDP,
+			name:           option.Name,
+			addr:           addr,
+			pingAddr:       pingAddr,
+			tp:             C.Shadowsocks,
+			udp:            option.UDP,
+			timeout:        timeout,
+			forbidDuration: forbidDuration,
 		},
 		cipher: ciph,
 

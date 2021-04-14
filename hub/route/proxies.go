@@ -125,7 +125,8 @@ func getProxyDelay(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.JSON(w, r, render.M{
-		"delay": delay,
-		"loss":  loss,
+		"delay":    delay,
+		"loss":     loss,
+		"downfrom": proxy.DownFrom(),
 	})
 }

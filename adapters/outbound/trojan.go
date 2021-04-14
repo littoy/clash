@@ -38,6 +38,8 @@ type TrojanOption struct {
 	UDP            bool        `proxy:"udp,omitempty"`
 	Network        string      `proxy:"network,omitempty"`
 	GrpcOpts       GrpcOptions `proxy:"grpc-opts,omitempty"`
+	timeout        int         `proxy:"timeout,omitempty"`
+	forbidDuration int         `proxy:"forbidDuration,omitempty"`
 }
 
 func (t *Trojan) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
@@ -132,6 +134,8 @@ func (t *Trojan) MarshalJSON() ([]byte, error) {
 func NewTrojan(option TrojanOption) (*Trojan, error) {
 	addr := net.JoinHostPort(option.Server, strconv.Itoa(option.Port))
 	pingAddr := option.PingServer
+	timeout := option.timeout
+	forbidDuration := option.forbidDuration
 
 	tOption := &trojan.Option{
 		Password:           option.Password,
@@ -147,11 +151,13 @@ func NewTrojan(option TrojanOption) (*Trojan, error) {
 
 	t := &Trojan{
 		Base: &Base{
-			name:     option.Name,
-			addr:     addr,
-			pingAddr: pingAddr,
-			tp:       C.Trojan,
-			udp:      option.UDP,
+			name:           option.Name,
+			addr:           addr,
+			pingAddr:       pingAddr,
+			tp:             C.Trojan,
+			udp:            option.UDP,
+			timeout:        timeout,
+			forbidDuration: forbidDuration,
 		},
 		instance: trojan.New(tOption),
 	}

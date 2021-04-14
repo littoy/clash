@@ -16,11 +16,14 @@ import (
 )
 
 type Base struct {
-	name     string
-	addr     string
-	pingAddr string
-	tp       C.AdapterType
-	udp      bool
+	name           string
+	addr           string
+	pingAddr       string
+	tp             C.AdapterType
+	udp            bool
+	timeout        int
+	forbidDuration int
+	downFrom       int64
 }
 
 func (b *Base) Name() string {
@@ -57,12 +60,36 @@ func (b *Base) PingAddr() string {
 	return b.pingAddr
 }
 
+func (b *Base) Timeout() int {
+	if b.timeout < 1 {
+		return 65535
+	} else {
+		return b.timeout
+	}
+}
+
+func (b *Base) ForbidDuration() int {
+	return b.forbidDuration
+}
+
+func (b *Base) DownFrom() int64 {
+	return b.downFrom
+}
+
+func (b *Base) SetDownFrom(t int64) {
+	b.downFrom = t
+}
+
+func (b *Base) Forbid() bool {
+	return b.forbidDuration > 0 && (time.Now().Unix()-b.downFrom) < int64(b.forbidDuration)
+}
+
 func (b *Base) Unwrap(metadata *C.Metadata) C.Proxy {
 	return nil
 }
 
-func NewBase(name string, addr string, pingAddr string, tp C.AdapterType, udp bool) *Base {
-	return &Base{name, addr, pingAddr, tp, udp}
+func NewBase(name string, addr string, pingAddr string, tp C.AdapterType, udp bool, timeout int, forbidDuration int) *Base {
+	return &Base{name, addr, pingAddr, tp, udp, timeout, forbidDuration, 0}
 }
 
 type conn struct {
@@ -106,7 +133,7 @@ type Proxy struct {
 }
 
 func (p *Proxy) Alive() bool {
-	return p.alive.Load()
+	return p.alive.Load() && (!p.Forbid())
 }
 
 func (p *Proxy) Dial(metadata *C.Metadata) (C.Conn, error) {
@@ -119,6 +146,9 @@ func (p *Proxy) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn, 
 	conn, err := p.ProxyAdapter.DialContext(ctx, metadata)
 	if err != nil {
 		p.alive.Store(false)
+		if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
+			p.SetDownFrom(time.Now().Unix())
+		}
 	}
 	return conn, err
 }
@@ -184,11 +214,22 @@ func (p *Proxy) MarshalJSON() ([]byte, error) {
 // URLTest get the delay for the specified URL
 func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, err error) {
 	defer func() {
-		p.alive.Store(err == nil)
+		if err != nil || t > uint16(p.Timeout()) {
+			p.alive.Store(false)
+			if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
+				p.SetDownFrom(time.Now().Unix())
+			}
+		} else {
+			p.alive.Store(true)
+			if !p.Forbid() {
+				p.SetDownFrom(0)
+			}
+		}
 		record := C.DelayHistory{Time: time.Now()}
 		if err == nil {
 			record.Delay = t
 			record.Loss = l
+			record.DownFrom = p.DownFrom()
 		}
 		p.history.Put(record)
 		if p.history.Len() > 10 {

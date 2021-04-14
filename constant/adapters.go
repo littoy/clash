@@ -89,14 +89,20 @@ type ProxyAdapter interface {
 	MarshalJSON() ([]byte, error)
 	Addr() string
 	PingAddr() string
+	Timeout() int
+	ForbidDuration() int
+	DownFrom() int64
+	SetDownFrom(int64)
+	Forbid() bool
 	// Unwrap extracts the proxy from a proxy-group. It returns nil when nothing to extract.
 	Unwrap(metadata *Metadata) Proxy
 }
 
 type DelayHistory struct {
-	Time  time.Time `json:"time"`
-	Delay uint16    `json:"delay"`
-	Loss  uint16    `json:"loss"`
+	Time     time.Time `json:"time"`
+	Delay    uint16    `json:"delay"`
+	Loss     uint16    `json:"loss"`
+	DownFrom int64     `json:"downfrom"`
 }
 
 type Proxy interface {

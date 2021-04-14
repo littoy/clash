@@ -48,6 +48,8 @@ type VmessOption struct {
 	WSHeaders      map[string]string `proxy:"ws-headers,omitempty"`
 	SkipCertVerify bool              `proxy:"skip-cert-verify,omitempty"`
 	ServerName     string            `proxy:"servername,omitempty"`
+	timeout        int               `proxy:"timeout,omitempty"`
+	forbidDuration int               `proxy:"forbidDuration,omitempty"`
 }
 
 type HTTPOptions struct {
@@ -260,13 +262,17 @@ func NewVmess(option VmessOption) (*Vmess, error) {
 		}
 	}
 	pingAddr := option.PingServer
+	timeout := option.timeout
+	forbidDuration := option.forbidDuration
 	v := &Vmess{
 		Base: &Base{
-			name:     option.Name,
-			addr:     net.JoinHostPort(option.Server, strconv.Itoa(option.Port)),
-			pingAddr: pingAddr,
-			tp:       C.Vmess,
-			udp:      option.UDP,
+			name:           option.Name,
+			addr:           net.JoinHostPort(option.Server, strconv.Itoa(option.Port)),
+			pingAddr:       pingAddr,
+			tp:             C.Vmess,
+			udp:            option.UDP,
+			timeout:        timeout,
+			forbidDuration: forbidDuration,
 		},
 		client: client,
 		option: &option,
