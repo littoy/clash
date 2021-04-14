@@ -31,7 +31,7 @@ type ShadowSocks struct {
 type ShadowSocksOption struct {
 	Name       string                 `proxy:"name"`
 	Server     string                 `proxy:"server"`
-	PingServer string                 `proxy:"pingServer"`
+	PingServer string                 `proxy:"pingServer,omitempty"`
 	Port       int                    `proxy:"port"`
 	Password   string                 `proxy:"password"`
 	Cipher     string                 `proxy:"cipher"`

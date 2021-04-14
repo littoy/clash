@@ -27,7 +27,7 @@ type Socks5 struct {
 type Socks5Option struct {
 	Name           string `proxy:"name"`
 	Server         string `proxy:"server"`
-	PingServer     string `proxy:"pingServer"`
+	PingServer     string `proxy:"pingServer,omitempty"`
 	Port           int    `proxy:"port"`
 	UserName       string `proxy:"username,omitempty"`
 	Password       string `proxy:"password,omitempty"`

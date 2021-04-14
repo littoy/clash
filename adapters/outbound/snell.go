@@ -24,7 +24,7 @@ type Snell struct {
 type SnellOption struct {
 	Name       string                 `proxy:"name"`
 	Server     string                 `proxy:"server"`
-	PingServer string                 `proxy:"pingServer"`
+	PingServer string                 `proxy:"pingServer,omitempty"`
 	Port       int                    `proxy:"port"`
 	Psk        string                 `proxy:"psk"`
 	Version    int                    `proxy:"version,omitempty"`

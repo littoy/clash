@@ -33,7 +33,7 @@ type Vmess struct {
 type VmessOption struct {
 	Name           string            `proxy:"name"`
 	Server         string            `proxy:"server"`
-	PingServer     string            `proxy:"pingServer"`
+	PingServer     string            `proxy:"pingServer,omitempty"`
 	Port           int               `proxy:"port"`
 	UUID           string            `proxy:"uuid"`
 	AlterID        int               `proxy:"alterId"`
