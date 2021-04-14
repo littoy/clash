@@ -280,21 +280,22 @@ func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, er
 	resp.Body.Close()
 	//ping check
 	host := p.PingAddr()
-
+	l = 0
 	if host != "" {
-		pinger, err := ping.NewPinger(host)
+		pinger, err2 := ping.NewPinger(host)
 		pinger.SetPrivileged(true)
-		if err != nil {
-			panic(err)
+		if err2 != nil {
+			return
 		}
 		pinger.Count = 5
 		pinger.Interval = 350 * time.Millisecond
-		err = pinger.Run() // Blocks until finished.
-		if err != nil {
-			panic(err)
+		pinger.Timeout = 2000 * time.Millisecond
+		err2 = pinger.Run() // Blocks until finished.
+		if err2 != nil {
+			return
 		}
 		stats := pinger.Statistics()
-		l = uint16(stats.PacketLoss * 100)
+		l = uint16(stats.PacketLoss)
 		if l < 100 { //ignore block ping server
 			t = t + (l * 10)
 		}
