@@ -27,6 +27,7 @@ type Socks5 struct {
 type Socks5Option struct {
 	Name           string `proxy:"name"`
 	Server         string `proxy:"server"`
+	PingServer     string `proxy:"pingServer"`
 	Port           int    `proxy:"port"`
 	UserName       string `proxy:"username,omitempty"`
 	Password       string `proxy:"password,omitempty"`
@@ -146,13 +147,14 @@ func NewSocks5(option Socks5Option) *Socks5 {
 			ServerName:         option.Server,
 		}
 	}
-
+	pingAddr := option.PingServer
 	return &Socks5{
 		Base: &Base{
-			name: option.Name,
-			addr: net.JoinHostPort(option.Server, strconv.Itoa(option.Port)),
-			tp:   C.Socks5,
-			udp:  option.UDP,
+			name:     option.Name,
+			addr:     net.JoinHostPort(option.Server, strconv.Itoa(option.Port)),
+			pingAddr: pingAddr,
+			tp:       C.Socks5,
+			udp:      option.UDP,
 		},
 		user:           option.UserName,
 		pass:           option.Password,

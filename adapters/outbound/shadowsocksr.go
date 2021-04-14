@@ -27,6 +27,7 @@ type ShadowSocksR struct {
 type ShadowSocksROption struct {
 	Name          string `proxy:"name"`
 	Server        string `proxy:"server"`
+	PingServer    string `proxy:"pingServer"`
 	Port          int    `proxy:"port"`
 	Password      string `proxy:"password"`
 	Cipher        string `proxy:"cipher"`
@@ -96,6 +97,7 @@ func (ssr *ShadowSocksR) MarshalJSON() ([]byte, error) {
 
 func NewShadowSocksR(option ShadowSocksROption) (*ShadowSocksR, error) {
 	addr := net.JoinHostPort(option.Server, strconv.Itoa(option.Port))
+	pingAddr := option.PingServer
 	cipher := option.Cipher
 	password := option.Password
 	coreCiph, err := core.PickCipher(cipher, nil, password)
@@ -140,10 +142,11 @@ func NewShadowSocksR(option ShadowSocksROption) (*ShadowSocksR, error) {
 
 	return &ShadowSocksR{
 		Base: &Base{
-			name: option.Name,
-			addr: addr,
-			tp:   C.ShadowsocksR,
-			udp:  option.UDP,
+			name:     option.Name,
+			addr:     addr,
+			pingAddr: pingAddr,
+			tp:       C.ShadowsocksR,
+			udp:      option.UDP,
 		},
 		cipher:   coreCiph,
 		obfs:     obfs,

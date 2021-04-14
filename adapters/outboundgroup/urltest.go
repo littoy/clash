@@ -134,7 +134,7 @@ func parseURLTestOption(config map[string]interface{}) []urlTestOption {
 
 func NewURLTest(commonOptions *GroupCommonOption, providers []provider.ProxyProvider, options ...urlTestOption) *URLTest {
 	urlTest := &URLTest{
-		Base:       outbound.NewBase(commonOptions.Name, "", C.URLTest, false),
+		Base:       outbound.NewBase(commonOptions.Name, "", "", C.URLTest, false),
 		single:     singledo.NewSingle(defaultGetProxiesDuration),
 		fastSingle: singledo.NewSingle(time.Second * 10),
 		providers:  providers,

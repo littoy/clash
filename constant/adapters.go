@@ -88,6 +88,7 @@ type ProxyAdapter interface {
 	SupportUDP() bool
 	MarshalJSON() ([]byte, error)
 	Addr() string
+	PingAddr() string
 	// Unwrap extracts the proxy from a proxy-group. It returns nil when nothing to extract.
 	Unwrap(metadata *Metadata) Proxy
 }
@@ -95,6 +96,7 @@ type ProxyAdapter interface {
 type DelayHistory struct {
 	Time  time.Time `json:"time"`
 	Delay uint16    `json:"delay"`
+	Loss  uint16    `json:"loss"`
 }
 
 type Proxy interface {
@@ -103,7 +105,7 @@ type Proxy interface {
 	DelayHistory() []DelayHistory
 	Dial(metadata *Metadata) (Conn, error)
 	LastDelay() uint16
-	URLTest(ctx context.Context, url string) (uint16, error)
+	URLTest(ctx context.Context, url string) (uint16, uint16, error)
 }
 
 // AdapterType is enum of adapter type

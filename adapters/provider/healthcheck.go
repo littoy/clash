@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultURLTestTimeout = time.Second * 5
+	defaultURLTestTimeout = time.Second * 10
 )
 
 type HealthCheckOption struct {

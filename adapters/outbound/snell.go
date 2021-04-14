@@ -22,12 +22,13 @@ type Snell struct {
 }
 
 type SnellOption struct {
-	Name     string                 `proxy:"name"`
-	Server   string                 `proxy:"server"`
-	Port     int                    `proxy:"port"`
-	Psk      string                 `proxy:"psk"`
-	Version  int                    `proxy:"version,omitempty"`
-	ObfsOpts map[string]interface{} `proxy:"obfs-opts,omitempty"`
+	Name       string                 `proxy:"name"`
+	Server     string                 `proxy:"server"`
+	PingServer string                 `proxy:"pingServer"`
+	Port       int                    `proxy:"port"`
+	Psk        string                 `proxy:"psk"`
+	Version    int                    `proxy:"version,omitempty"`
+	ObfsOpts   map[string]interface{} `proxy:"obfs-opts,omitempty"`
 }
 
 type streamOption struct {
@@ -84,6 +85,7 @@ func (s *Snell) DialContext(ctx context.Context, metadata *C.Metadata) (_ C.Conn
 
 func NewSnell(option SnellOption) (*Snell, error) {
 	addr := net.JoinHostPort(option.Server, strconv.Itoa(option.Port))
+	pingAddr := option.PingServer
 	psk := []byte(option.Psk)
 
 	decoder := structure.NewDecoder(structure.Option{TagName: "obfs", WeaklyTypedInput: true})
@@ -109,9 +111,10 @@ func NewSnell(option SnellOption) (*Snell, error) {
 
 	s := &Snell{
 		Base: &Base{
-			name: option.Name,
-			addr: addr,
-			tp:   C.Snell,
+			name:     option.Name,
+			addr:     addr,
+			pingAddr: pingAddr,
+			tp:       C.Snell,
 		},
 		psk:        psk,
 		obfsOption: obfsOption,

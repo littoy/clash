@@ -29,6 +29,7 @@ type Trojan struct {
 type TrojanOption struct {
 	Name           string      `proxy:"name"`
 	Server         string      `proxy:"server"`
+	PingServer     string      `proxy:"pingServer"`
 	Port           int         `proxy:"port"`
 	Password       string      `proxy:"password"`
 	ALPN           []string    `proxy:"alpn,omitempty"`
@@ -130,6 +131,7 @@ func (t *Trojan) MarshalJSON() ([]byte, error) {
 
 func NewTrojan(option TrojanOption) (*Trojan, error) {
 	addr := net.JoinHostPort(option.Server, strconv.Itoa(option.Port))
+	pingAddr := option.PingServer
 
 	tOption := &trojan.Option{
 		Password:           option.Password,
@@ -145,10 +147,11 @@ func NewTrojan(option TrojanOption) (*Trojan, error) {
 
 	t := &Trojan{
 		Base: &Base{
-			name: option.Name,
-			addr: addr,
-			tp:   C.Trojan,
-			udp:  option.UDP,
+			name:     option.Name,
+			addr:     addr,
+			pingAddr: pingAddr,
+			tp:       C.Trojan,
+			udp:      option.UDP,
 		},
 		instance: trojan.New(tOption),
 	}

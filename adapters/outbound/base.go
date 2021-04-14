@@ -10,15 +10,17 @@ import (
 
 	"github.com/Dreamacro/clash/common/queue"
 	C "github.com/Dreamacro/clash/constant"
+	"github.com/go-ping/ping"
 
 	"go.uber.org/atomic"
 )
 
 type Base struct {
-	name string
-	addr string
-	tp   C.AdapterType
-	udp  bool
+	name     string
+	addr     string
+	pingAddr string
+	tp       C.AdapterType
+	udp      bool
 }
 
 func (b *Base) Name() string {
@@ -51,12 +53,16 @@ func (b *Base) Addr() string {
 	return b.addr
 }
 
+func (b *Base) PingAddr() string {
+	return b.pingAddr
+}
+
 func (b *Base) Unwrap(metadata *C.Metadata) C.Proxy {
 	return nil
 }
 
-func NewBase(name string, addr string, tp C.AdapterType, udp bool) *Base {
-	return &Base{name, addr, tp, udp}
+func NewBase(name string, addr string, pingAddr string, tp C.AdapterType, udp bool) *Base {
+	return &Base{name, addr, pingAddr, tp, udp}
 }
 
 type conn struct {
@@ -144,6 +150,24 @@ func (p *Proxy) LastDelay() (delay uint16) {
 	return history.Delay
 }
 
+// LastDelay return last history record. if proxy is not alive, return the max value of uint16.
+func (p *Proxy) LastLoss() (delay uint16) {
+	var max uint16 = 0xffff
+	if !p.alive.Load() {
+		return max
+	}
+
+	last := p.history.Last()
+	if last == nil {
+		return max
+	}
+	history := last.(C.DelayHistory)
+	if history.Delay == 0 {
+		return max
+	}
+	return history.Loss
+}
+
 func (p *Proxy) MarshalJSON() ([]byte, error) {
 	inner, err := p.ProxyAdapter.MarshalJSON()
 	if err != nil {
@@ -158,12 +182,13 @@ func (p *Proxy) MarshalJSON() ([]byte, error) {
 }
 
 // URLTest get the delay for the specified URL
-func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, err error) {
+func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, err error) {
 	defer func() {
 		p.alive.Store(err == nil)
 		record := C.DelayHistory{Time: time.Now()}
 		if err == nil {
 			record.Delay = t
+			record.Loss = l
 		}
 		p.history.Put(record)
 		if p.history.Len() > 10 {
@@ -210,8 +235,28 @@ func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, err error) {
 	if err != nil {
 		return
 	}
-	resp.Body.Close()
 	t = uint16(time.Since(start) / time.Millisecond)
+	resp.Body.Close()
+	//ping check
+	host := p.PingAddr()
+
+	if host != "" {
+		pinger, err := ping.NewPinger(host)
+		pinger.SetPrivileged(true)
+		if err != nil {
+			panic(err)
+		}
+		pinger.Count = 5
+		err = pinger.Run() // Blocks until finished.
+		if err != nil {
+			panic(err)
+		}
+		stats := pinger.Statistics()
+		l = uint16(stats.PacketLoss * 100)
+		if l < 100 { //ignore block ping server
+			t = t + (l * 10)
+		}
+	}
 	return
 }
 
