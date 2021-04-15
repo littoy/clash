@@ -16,6 +16,7 @@ type Selector struct {
 	disableUDP bool
 	single     *singledo.Single
 	selected   string
+	autoBackup bool
 	providers  []provider.ProxyProvider
 }
 
@@ -80,12 +81,26 @@ func (s *Selector) selectedProxy(touch bool) C.Proxy {
 	elm, _, _ := s.single.Do(func() (interface{}, error) {
 		proxies := getProvidersProxies(s.providers, touch)
 		for _, proxy := range proxies {
-			if proxy.Name() == s.selected {
+			if proxy.Name() == s.selected && (proxy.Alive() || !s.autoBackup) {
 				return proxy, nil
 			}
 		}
+		//is autoBackup , choose min delay node
+		fast := proxies[0]
+		min := fast.LastDelay()
+		for _, proxy := range proxies[1:] {
+			if !proxy.Alive() {
+				continue
+			}
 
-		return proxies[0], nil
+			delay := proxy.LastDelay()
+			if delay < min {
+				fast = proxy
+				min = delay
+			}
+		}
+
+		return fast, nil
 	})
 
 	return elm.(C.Proxy)
@@ -99,5 +114,6 @@ func NewSelector(options *GroupCommonOption, providers []provider.ProxyProvider)
 		providers:  providers,
 		selected:   selected,
 		disableUDP: options.DisableUDP,
+		autoBackup: options.AutoBackup,
 	}
 }
