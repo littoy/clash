@@ -39,6 +39,7 @@ type TrojanOption struct {
 	Network        string      `proxy:"network,omitempty"`
 	GrpcOpts       GrpcOptions `proxy:"grpc-opts,omitempty"`
 	Timeout        int         `proxy:"timeout,omitempty"`
+	MaxLoss        int         `proxy:"max-loss,omitempty"`
 	ForbidDuration int         `proxy:"forbid-duration,omitempty"`
 }
 
@@ -157,6 +158,7 @@ func NewTrojan(option TrojanOption) (*Trojan, error) {
 			tp:             C.Trojan,
 			udp:            option.UDP,
 			timeout:        timeout,
+			maxloss:        option.MaxLoss,
 			forbidDuration: forbidDuration,
 		},
 		instance: trojan.New(tOption),

@@ -22,6 +22,7 @@ type Base struct {
 	tp             C.AdapterType
 	udp            bool
 	timeout        int
+	maxloss        int
 	forbidDuration int
 	downFrom       int64
 }
@@ -68,6 +69,14 @@ func (b *Base) Timeout() int {
 	}
 }
 
+func (b *Base) MaxLoss() int {
+	if b.maxloss < 1 {
+		return 65535
+	} else {
+		return b.maxloss
+	}
+}
+
 func (b *Base) ForbidDuration() int {
 	return b.forbidDuration
 }
@@ -88,8 +97,8 @@ func (b *Base) Unwrap(metadata *C.Metadata) C.Proxy {
 	return nil
 }
 
-func NewBase(name string, addr string, pingAddr string, tp C.AdapterType, udp bool, timeout int, forbidDuration int) *Base {
-	return &Base{name, addr, pingAddr, tp, udp, timeout, forbidDuration, 0}
+func NewBase(name string, addr string, pingAddr string, tp C.AdapterType, udp bool, timeout int, maxloss int, forbidDuration int) *Base {
+	return &Base{name, addr, pingAddr, tp, udp, timeout, maxloss, forbidDuration, 0}
 }
 
 type conn struct {
@@ -180,9 +189,9 @@ func (p *Proxy) LastDelay() (delay uint16) {
 	return history.Delay
 }
 
-// LastDelay return last history record. if proxy is not alive, return the max value of uint16.
+// LastLoss return last history record. if proxy is not alive, return the max value of 100%.
 func (p *Proxy) LastLoss() (delay uint16) {
-	var max uint16 = 0xffff
+	var max uint16 = 100
 	if !p.alive.Load() {
 		return max
 	}
@@ -214,7 +223,7 @@ func (p *Proxy) MarshalJSON() ([]byte, error) {
 // URLTest get the delay for the specified URL
 func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, err error) {
 	defer func() {
-		if err != nil || t > uint16(p.Timeout()) {
+		if err != nil || t >= uint16(p.Timeout()) || l >= uint16(p.MaxLoss()) {
 			p.alive.Store(false)
 			if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
 				p.SetDownFrom(time.Now().Unix())
@@ -298,6 +307,8 @@ func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, er
 		l = uint16(stats.PacketLoss)
 		if l < 100 { //ignore block ping server
 			t = t + (l * 10)
+		} else {
+			l = 0
 		}
 	}
 	return

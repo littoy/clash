@@ -30,6 +30,7 @@ type SnellOption struct {
 	Version        int                    `proxy:"version,omitempty"`
 	ObfsOpts       map[string]interface{} `proxy:"obfs-opts,omitempty"`
 	Timeout        int                    `proxy:"timeout,omitempty"`
+	MaxLoss        int                    `proxy:"max-loss,omitempty"`
 	ForbidDuration int                    `proxy:"forbid-duration,omitempty"`
 }
 
@@ -120,6 +121,7 @@ func NewSnell(option SnellOption) (*Snell, error) {
 			pingAddr:       pingAddr,
 			tp:             C.Snell,
 			timeout:        timeout,
+			maxloss:        option.MaxLoss,
 			forbidDuration: forbidDuration,
 		},
 		psk:        psk,

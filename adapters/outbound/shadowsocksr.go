@@ -37,6 +37,7 @@ type ShadowSocksROption struct {
 	ProtocolParam  string `proxy:"protocol-param,omitempty"`
 	UDP            bool   `proxy:"udp,omitempty"`
 	Timeout        int    `proxy:"timeout,omitempty"`
+	MaxLoss        int    `proxy:"max-loss,omitempty"`
 	ForbidDuration int    `proxy:"forbid-duration,omitempty"`
 }
 
@@ -152,6 +153,7 @@ func NewShadowSocksR(option ShadowSocksROption) (*ShadowSocksR, error) {
 			tp:             C.ShadowsocksR,
 			udp:            option.UDP,
 			timeout:        timeout,
+			maxloss:        option.MaxLoss,
 			forbidDuration: forbidDuration,
 		},
 		cipher:   coreCiph,

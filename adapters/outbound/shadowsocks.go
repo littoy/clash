@@ -39,6 +39,7 @@ type ShadowSocksOption struct {
 	Plugin         string                 `proxy:"plugin,omitempty"`
 	PluginOpts     map[string]interface{} `proxy:"plugin-opts,omitempty"`
 	Timeout        int                    `proxy:"timeout,omitempty"`
+	MaxLoss        int                    `proxy:"max-loss,omitempty"`
 	ForbidDuration int                    `proxy:"forbid-duration,omitempty"`
 }
 
@@ -171,6 +172,7 @@ func NewShadowSocks(option ShadowSocksOption) (*ShadowSocks, error) {
 			tp:             C.Shadowsocks,
 			udp:            option.UDP,
 			timeout:        timeout,
+			maxloss:        option.MaxLoss,
 			forbidDuration: forbidDuration,
 		},
 		cipher: ciph,

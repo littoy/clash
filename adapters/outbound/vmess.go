@@ -49,6 +49,7 @@ type VmessOption struct {
 	SkipCertVerify bool              `proxy:"skip-cert-verify,omitempty"`
 	ServerName     string            `proxy:"servername,omitempty"`
 	Timeout        int               `proxy:"timeout,omitempty"`
+	MaxLoss        int               `proxy:"max-loss,omitempty"`
 	ForbidDuration int               `proxy:"forbid-duration,omitempty"`
 }
 
@@ -272,6 +273,7 @@ func NewVmess(option VmessOption) (*Vmess, error) {
 			tp:             C.Vmess,
 			udp:            option.UDP,
 			timeout:        timeout,
+			maxloss:        option.MaxLoss,
 			forbidDuration: forbidDuration,
 		},
 		client: client,

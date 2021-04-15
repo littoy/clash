@@ -35,6 +35,7 @@ type Socks5Option struct {
 	UDP            bool   `proxy:"udp,omitempty"`
 	SkipCertVerify bool   `proxy:"skip-cert-verify,omitempty"`
 	Timeout        int    `proxy:"timeout,omitempty"`
+	MaxLoss        int    `proxy:"max-loss,omitempty"`
 	ForbidDuration int    `proxy:"forbid-duration,omitempty"`
 }
 
@@ -160,6 +161,7 @@ func NewSocks5(option Socks5Option) *Socks5 {
 			tp:             C.Socks5,
 			udp:            option.UDP,
 			timeout:        timeout,
+			maxloss:        option.MaxLoss,
 			forbidDuration: forbidDuration,
 		},
 		user:           option.UserName,
