@@ -85,7 +85,13 @@ func (f *Fallback) findAliveProxy(touch bool) C.Proxy {
 	}
 
 	for _, proxy := range proxies {
-		if strings.Contains(proxy.Name(), "best") {
+		if proxy.Alive() && strings.Contains(proxy.Name(), "best") {
+			return proxy
+		}
+	}
+
+	for _, proxy := range proxies {
+		if proxy.Alive() {
 			return proxy
 		}
 	}
