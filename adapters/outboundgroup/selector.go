@@ -110,7 +110,7 @@ func (s *Selector) selectedProxy(touch bool) C.Proxy {
 func NewSelector(options *GroupCommonOption, providers []provider.ProxyProvider) *Selector {
 	selected := providers[0].Proxies()[0].Name()
 	return &Selector{
-		Base:       outbound.NewBase(options.Name, "", "", C.Selector, false, 0, 0, 0),
+		Base:       outbound.NewBase(options.Name, "", "", C.Selector, false, 0, 0, 0, 1),
 		single:     singledo.NewSingle(defaultGetProxiesDuration),
 		providers:  providers,
 		selected:   selected,

@@ -39,6 +39,7 @@ type ShadowSocksROption struct {
 	Timeout        int    `proxy:"timeout,omitempty"`
 	MaxLoss        int    `proxy:"max-loss,omitempty"`
 	ForbidDuration int    `proxy:"forbid-duration,omitempty"`
+	MaxFail        int    `proxy:"max-fail,omitempty"`
 }
 
 func (ssr *ShadowSocksR) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
@@ -155,6 +156,7 @@ func NewShadowSocksR(option ShadowSocksROption) (*ShadowSocksR, error) {
 			timeout:        timeout,
 			maxloss:        option.MaxLoss,
 			forbidDuration: forbidDuration,
+			maxFail:        option.MaxFail,
 		},
 		cipher:   coreCiph,
 		obfs:     obfs,

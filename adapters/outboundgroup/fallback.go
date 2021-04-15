@@ -101,7 +101,7 @@ func (f *Fallback) findAliveProxy(touch bool) C.Proxy {
 
 func NewFallback(options *GroupCommonOption, providers []provider.ProxyProvider) *Fallback {
 	return &Fallback{
-		Base:       outbound.NewBase(options.Name, "", "", C.Fallback, false, 0, 0, 0),
+		Base:       outbound.NewBase(options.Name, "", "", C.Fallback, false, 0, 0, 0, 1),
 		single:     singledo.NewSingle(defaultGetProxiesDuration),
 		providers:  providers,
 		disableUDP: options.DisableUDP,

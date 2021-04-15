@@ -41,6 +41,7 @@ type TrojanOption struct {
 	Timeout        int         `proxy:"timeout,omitempty"`
 	MaxLoss        int         `proxy:"max-loss,omitempty"`
 	ForbidDuration int         `proxy:"forbid-duration,omitempty"`
+	MaxFail        int         `proxy:"max-fail,omitempty"`
 }
 
 func (t *Trojan) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
@@ -160,6 +161,7 @@ func NewTrojan(option TrojanOption) (*Trojan, error) {
 			timeout:        timeout,
 			maxloss:        option.MaxLoss,
 			forbidDuration: forbidDuration,
+			maxFail:        option.MaxFail,
 		},
 		instance: trojan.New(tOption),
 	}

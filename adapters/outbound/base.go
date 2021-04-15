@@ -25,6 +25,8 @@ type Base struct {
 	timeout        int
 	maxloss        int
 	forbidDuration int
+	maxFail        int
+	failCount      int
 	downFrom       int64
 }
 
@@ -90,6 +92,18 @@ func (b *Base) SetDownFrom(t int64) {
 	b.downFrom = t
 }
 
+func (b *Base) FailCount() int {
+	return b.failCount
+}
+
+func (b *Base) SetFailCount(t int) {
+	b.failCount = t
+}
+
+func (b *Base) MaxFail() int {
+	return b.maxFail
+}
+
 func (b *Base) Forbid() bool {
 	return b.forbidDuration > 0 && (time.Now().Unix()-b.downFrom) < int64(b.forbidDuration)
 }
@@ -98,8 +112,8 @@ func (b *Base) Unwrap(metadata *C.Metadata) C.Proxy {
 	return nil
 }
 
-func NewBase(name string, addr string, pingAddr string, tp C.AdapterType, udp bool, timeout int, maxloss int, forbidDuration int) *Base {
-	return &Base{name, addr, pingAddr, tp, udp, timeout, maxloss, forbidDuration, 0}
+func NewBase(name string, addr string, pingAddr string, tp C.AdapterType, udp bool, timeout int, maxloss int, forbidDuration int, maxFail int) *Base {
+	return &Base{name, addr, pingAddr, tp, udp, timeout, maxloss, forbidDuration, maxFail, 0, 0}
 }
 
 type conn struct {
@@ -155,9 +169,12 @@ func (p *Proxy) Dial(metadata *C.Metadata) (C.Conn, error) {
 func (p *Proxy) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn, error) {
 	conn, err := p.ProxyAdapter.DialContext(ctx, metadata)
 	if err != nil {
-		p.alive.Store(false)
-		if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
-			p.SetDownFrom(time.Now().Unix())
+		p.SetFailCount(p.FailCount() + 1)
+		if p.FailCount() >= p.MaxFail() {
+			p.alive.Store(false)
+			if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
+				p.SetDownFrom(time.Now().Unix())
+			}
 		}
 	}
 	return conn, err
@@ -225,12 +242,17 @@ func (p *Proxy) MarshalJSON() ([]byte, error) {
 func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, err error) {
 	defer func() {
 		if err != nil || t >= uint16(p.Timeout()) || l >= uint16(p.MaxLoss()) {
-			p.alive.Store(false)
-			if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
-				p.SetDownFrom(time.Now().Unix())
+			p.SetFailCount(p.FailCount() + 1)
+			if p.FailCount() >= p.MaxFail() {
+				p.alive.Store(false)
+				if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
+					p.SetDownFrom(time.Now().Unix())
+				}
 			}
 		} else {
 			p.alive.Store(true)
+			p.SetFailCount(0)
+
 			if !p.Forbid() {
 				p.SetDownFrom(0)
 			}

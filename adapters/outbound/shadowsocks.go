@@ -41,6 +41,7 @@ type ShadowSocksOption struct {
 	Timeout        int                    `proxy:"timeout,omitempty"`
 	MaxLoss        int                    `proxy:"max-loss,omitempty"`
 	ForbidDuration int                    `proxy:"forbid-duration,omitempty"`
+	MaxFail        int                    `proxy:"max-fail,omitempty"`
 }
 
 type simpleObfsOption struct {
@@ -174,6 +175,7 @@ func NewShadowSocks(option ShadowSocksOption) (*ShadowSocks, error) {
 			timeout:        timeout,
 			maxloss:        option.MaxLoss,
 			forbidDuration: forbidDuration,
+			maxFail:        option.MaxFail,
 		},
 		cipher: ciph,
 

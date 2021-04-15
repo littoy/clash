@@ -95,6 +95,9 @@ type ProxyAdapter interface {
 	SetDownFrom(int64)
 	Forbid() bool
 	MaxLoss() int
+	SetFailCount(int)
+	FailCount() int
+	MaxFail() int
 	// Unwrap extracts the proxy from a proxy-group. It returns nil when nothing to extract.
 	Unwrap(metadata *Metadata) Proxy
 }

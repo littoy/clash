@@ -37,6 +37,7 @@ type Socks5Option struct {
 	Timeout        int    `proxy:"timeout,omitempty"`
 	MaxLoss        int    `proxy:"max-loss,omitempty"`
 	ForbidDuration int    `proxy:"forbid-duration,omitempty"`
+	MaxFail        int    `proxy:"max-fail,omitempty"`
 }
 
 func (ss *Socks5) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
@@ -163,6 +164,7 @@ func NewSocks5(option Socks5Option) *Socks5 {
 			timeout:        timeout,
 			maxloss:        option.MaxLoss,
 			forbidDuration: forbidDuration,
+			maxFail:        option.MaxFail,
 		},
 		user:           option.UserName,
 		pass:           option.Password,

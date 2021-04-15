@@ -32,6 +32,7 @@ type SnellOption struct {
 	Timeout        int                    `proxy:"timeout,omitempty"`
 	MaxLoss        int                    `proxy:"max-loss,omitempty"`
 	ForbidDuration int                    `proxy:"forbid-duration,omitempty"`
+	MaxFail        int                    `proxy:"max-fail,omitempty"`
 }
 
 type streamOption struct {
@@ -123,6 +124,7 @@ func NewSnell(option SnellOption) (*Snell, error) {
 			timeout:        timeout,
 			maxloss:        option.MaxLoss,
 			forbidDuration: forbidDuration,
+			maxFail:        option.MaxFail,
 		},
 		psk:        psk,
 		obfsOption: obfsOption,

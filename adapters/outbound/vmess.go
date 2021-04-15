@@ -51,6 +51,7 @@ type VmessOption struct {
 	Timeout        int               `proxy:"timeout,omitempty"`
 	MaxLoss        int               `proxy:"max-loss,omitempty"`
 	ForbidDuration int               `proxy:"forbid-duration,omitempty"`
+	MaxFail        int               `proxy:"max-fail,omitempty"`
 }
 
 type HTTPOptions struct {
@@ -275,6 +276,7 @@ func NewVmess(option VmessOption) (*Vmess, error) {
 			timeout:        timeout,
 			maxloss:        option.MaxLoss,
 			forbidDuration: forbidDuration,
+			maxFail:        option.MaxFail,
 		},
 		client: client,
 		option: &option,
