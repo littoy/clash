@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Dreamacro/clash/common/queue"
@@ -289,6 +290,12 @@ func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, er
 	resp.Body.Close()
 	//ping check
 	host := p.PingAddr()
+	if host == "" && p.MaxLoss() > 0 {
+		hosts := strings.Split(p.Addr(), ":")
+		if len(hosts) == 2 {
+			host = hosts[0]
+		}
+	}
 	l = 0
 	if host != "" {
 		pinger, err2 := ping.NewPinger(host)
