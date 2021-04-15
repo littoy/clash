@@ -85,18 +85,19 @@ func (s *Selector) selectedProxy(touch bool) C.Proxy {
 				return proxy, nil
 			}
 		}
-		//is autoBackup , choose min delay node
 		fast := proxies[0]
-		min := fast.LastDelay()
-		for _, proxy := range proxies[1:] {
-			if !proxy.Alive() {
-				continue
-			}
-
-			delay := proxy.LastDelay()
-			if delay < min {
-				fast = proxy
-				min = delay
+		if s.autoBackup {
+			//if autoBackup , choose min delay node
+			min := fast.LastDelay()
+			for _, proxy := range proxies[1:] {
+				if !proxy.Alive() {
+					continue
+				}
+				delay := proxy.LastDelay()
+				if delay < min {
+					fast = proxy
+					min = delay
+				}
 			}
 		}
 
