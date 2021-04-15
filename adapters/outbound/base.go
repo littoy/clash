@@ -303,8 +303,8 @@ func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, er
 		if err2 != nil {
 			return
 		}
-		pinger.Count = 5
-		pinger.Interval = 350 * time.Millisecond
+		pinger.Count = 10
+		pinger.Interval = 100 * time.Millisecond
 		pinger.Timeout = 2000 * time.Millisecond
 		err2 = pinger.Run() // Blocks until finished.
 		if err2 != nil {
