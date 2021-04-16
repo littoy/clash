@@ -1,7 +1,7 @@
 FROM golang:alpine as builder
 
 RUN apk add --no-cache make git && \
-    wget -O /Country.mmdb https://github.com/Dreamacro/maxmind-geoip/releases/latest/download/Country.mmdb
+    wget -O /Country.mmdb https://github.com/Hackl0us/GeoIP2-CN/raw/release/Country.mmdb
 WORKDIR /clash-src
 COPY --from=tonistiigi/xx:golang / /
 COPY . /clash-src
