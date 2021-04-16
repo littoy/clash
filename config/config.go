@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/Dreamacro/clash/adapters/outbound"
 	"github.com/Dreamacro/clash/adapters/outboundgroup"
 	"github.com/Dreamacro/clash/adapters/provider"
@@ -19,8 +21,6 @@ import (
 	"github.com/Dreamacro/clash/log"
 	R "github.com/Dreamacro/clash/rules"
 	T "github.com/Dreamacro/clash/tunnel"
-
-	yaml "gopkg.in/yaml.v2"
 )
 
 // General config
@@ -40,6 +40,7 @@ type Inbound struct {
 	RedirPort      int      `json:"redir-port"`
 	TProxyPort     int      `json:"tproxy-port"`
 	MixedPort      int      `json:"mixed-port"`
+	ShadowsocksURL string   `json:"shadowsocks"`
 	Authentication []string `json:"authentication"`
 	AllowLan       bool     `json:"allow-lan"`
 	BindAddress    string   `json:"bind-address"`
@@ -120,6 +121,7 @@ type RawConfig struct {
 	RedirPort          int          `yaml:"redir-port"`
 	TProxyPort         int          `yaml:"tproxy-port"`
 	MixedPort          int          `yaml:"mixed-port"`
+	ShadowsocksURL     string       `yaml:"shadowsocks-url"`
 	Authentication     []string     `yaml:"authentication"`
 	AllowLan           bool         `yaml:"allow-lan"`
 	BindAddress        string       `yaml:"bind-address"`
@@ -244,13 +246,14 @@ func parseGeneral(cfg *RawConfig) (*General, error) {
 
 	return &General{
 		Inbound: Inbound{
-			Port:        cfg.Port,
-			SocksPort:   cfg.SocksPort,
-			RedirPort:   cfg.RedirPort,
-			TProxyPort:  cfg.TProxyPort,
-			MixedPort:   cfg.MixedPort,
-			AllowLan:    cfg.AllowLan,
-			BindAddress: cfg.BindAddress,
+			Port:           cfg.Port,
+			SocksPort:      cfg.SocksPort,
+			RedirPort:      cfg.RedirPort,
+			TProxyPort:     cfg.TProxyPort,
+			MixedPort:      cfg.MixedPort,
+			ShadowsocksURL: cfg.ShadowsocksURL,
+			AllowLan:       cfg.AllowLan,
+			BindAddress:    cfg.BindAddress,
 		},
 		Controller: Controller{
 			ExternalController: cfg.ExternalController,
