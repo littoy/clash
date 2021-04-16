@@ -288,7 +288,8 @@ func ReCreateShadowSocks(shadowsocksURL string) error {
 	if err != nil {
 		return err
 	}
-	addr := genAddr(bindAddress, port, allowLan)
+
+	addr := genAddr(u.Hostname(), port, allowLan)
 	var (
 		method   string
 		password string
