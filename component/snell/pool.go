@@ -3,6 +3,7 @@ package snell
 import (
 	"context"
 	"net"
+	"time"
 
 	"github.com/Dreamacro/clash/component/pool"
 
@@ -61,6 +62,7 @@ func (pc *PoolConn) Write(b []byte) (int, error) {
 }
 
 func (pc *PoolConn) Close() error {
+	pc.Snell.Conn.SetReadDeadline(time.Time{})
 	pc.pool.Put(pc.Snell)
 	return nil
 }
