@@ -74,7 +74,7 @@ func (b *Base) Timeout() int {
 
 func (b *Base) MaxLoss() int {
 	if b.maxloss < 1 {
-		return 65535
+		return 101
 	} else {
 		return b.maxloss
 	}
@@ -209,18 +209,18 @@ func (p *Proxy) LastDelay() (delay uint16) {
 
 // LastLoss return last history record. if proxy is not alive, return the max value of 100%.
 func (p *Proxy) LastLoss() (delay uint16) {
-	var max uint16 = 100
+	var min uint16 = 0
 	if !p.alive.Load() {
-		return max
+		return min
 	}
 
 	last := p.history.Last()
 	if last == nil {
-		return max
+		return min
 	}
 	history := last.(C.DelayHistory)
 	if history.Delay == 0 {
-		return max
+		return min
 	}
 	return history.Loss
 }
@@ -312,7 +312,7 @@ func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, er
 	resp.Body.Close()
 	//ping check
 	host := p.PingAddr()
-	if host == "" && p.MaxLoss() > 0 {
+	if host == "" && p.MaxLoss() > 0 && p.MaxLoss() <= 100 {
 		hosts := strings.Split(p.Addr(), ":")
 		if len(hosts) == 2 {
 			host = hosts[0]
