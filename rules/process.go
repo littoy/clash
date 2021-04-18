@@ -44,6 +44,7 @@ func (ps *Process) Match(metadata *C.Metadata) bool {
 		processCache.Set(key, name)
 
 		cached = name
+		metadata.Process = name
 	}
 
 	return strings.EqualFold(cached.(string), ps.process)

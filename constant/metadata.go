@@ -50,6 +50,8 @@ func (t Type) String() string {
 		return "Redir"
 	case TPROXY:
 		return "TProxy"
+	case TUN:
+		return "Tun"
 	default:
 		return "Unknown"
 	}
@@ -69,6 +71,7 @@ type Metadata struct {
 	DstPort  string  `json:"destinationPort"`
 	AddrType int     `json:"-"`
 	Host     string  `json:"host"`
+	Process  string  `json:"process"`
 }
 
 func (m *Metadata) RemoteAddress() string {
