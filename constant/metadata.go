@@ -20,6 +20,7 @@ const (
 	SOCKS
 	REDIR
 	TPROXY
+	SHADOWSOCKS
 )
 
 type NetWork int
@@ -49,6 +50,8 @@ func (t Type) String() string {
 		return "Redir"
 	case TPROXY:
 		return "TProxy"
+	case SHADOWSOCKS:
+		return "ss"
 	default:
 		return "Unknown"
 	}

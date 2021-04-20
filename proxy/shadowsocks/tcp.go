@@ -58,5 +58,5 @@ func HandleShadowSocks(c net.Conn) {
 		return
 	}
 
-	tunnel.Add(adapters.NewSocket(tAddr, c, C.SOCKS))
+	tunnel.Add(adapters.NewSocket(tAddr, c, C.SHADOWSOCKS))
 }

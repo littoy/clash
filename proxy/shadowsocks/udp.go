@@ -63,5 +63,5 @@ func handleShadowSocksUDP(rAddr net.Addr, pc net.PacketConn, buf []byte) {
 		payload: payload,
 		bufRef:  buf,
 	}
-	tunnel.AddPacket(adapters.NewPacket(tAddr, packet, C.SOCKS))
+	tunnel.AddPacket(adapters.NewPacket(tAddr, packet, C.SHADOWSOCKS))
 }
