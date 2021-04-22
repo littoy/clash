@@ -12,11 +12,15 @@ import (
 	"sync"
 
 	"github.com/Dreamacro/clash/component/socks5"
+	xtls "github.com/xtls/go"
 )
 
 const (
 	// max packet length
 	maxLength = 8192
+
+	XRD = "xtls-rprx-direct"
+	XRO = "xtls-rprx-origin"
 )
 
 var (
@@ -31,19 +35,28 @@ type Command = byte
 var (
 	CommandTCP byte = 1
 	CommandUDP byte = 3
+
+	CommandXRD byte = 0xf0
+	CommandXRO byte = 0xf1
 )
 
 type Option struct {
-	Password           string
-	ALPN               []string
-	ServerName         string
-	SkipCertVerify     bool
-	ClientSessionCache tls.ClientSessionCache
+	Password            string
+	Flow                string
+	ALPN                []string
+	ServerName          string
+	SkipCertVerify      bool
+	ClientSessionCache  tls.ClientSessionCache
+	ClientXSessionCache xtls.ClientSessionCache
 }
 
 type Trojan struct {
 	option      *Option
 	hexPassword []byte
+}
+
+func (t *Trojan) GetFlow() string {
+	return t.option.Flow
 }
 
 func (t *Trojan) StreamConn(conn net.Conn) (net.Conn, error) {
@@ -52,20 +65,38 @@ func (t *Trojan) StreamConn(conn net.Conn) (net.Conn, error) {
 		alpn = t.option.ALPN
 	}
 
-	tlsConfig := &tls.Config{
-		NextProtos:         alpn,
-		MinVersion:         tls.VersionTLS12,
-		InsecureSkipVerify: t.option.SkipCertVerify,
-		ServerName:         t.option.ServerName,
-		ClientSessionCache: t.option.ClientSessionCache,
-	}
+	switch t.option.Flow {
+	case XRD, XRO, XRD + "-udp443", XRO + "-udp443":
+		xtlsConfig := &xtls.Config{
+			NextProtos:         alpn,
+			MinVersion:         xtls.VersionTLS12,
+			InsecureSkipVerify: t.option.SkipCertVerify,
+			ServerName:         t.option.ServerName,
+			ClientSessionCache: t.option.ClientXSessionCache,
+		}
 
-	tlsConn := tls.Client(conn, tlsConfig)
-	if err := tlsConn.Handshake(); err != nil {
-		return nil, err
-	}
+		xtlsConn := xtls.Client(conn, xtlsConfig)
+		if err := xtlsConn.Handshake(); err != nil {
+			return nil, err
+		}
 
-	return tlsConn, nil
+		return xtlsConn, nil
+	default:
+		tlsConfig := &tls.Config{
+			NextProtos:         alpn,
+			MinVersion:         tls.VersionTLS12,
+			InsecureSkipVerify: t.option.SkipCertVerify,
+			ServerName:         t.option.ServerName,
+			ClientSessionCache: t.option.ClientSessionCache,
+		}
+
+		tlsConn := tls.Client(conn, tlsConfig)
+		if err := tlsConn.Handshake(); err != nil {
+			return nil, err
+		}
+
+		return tlsConn, nil
+	}
 }
 
 func (t *Trojan) WriteHeader(w io.Writer, command Command, socks5Addr []byte) error {
