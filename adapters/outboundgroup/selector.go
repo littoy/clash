@@ -78,11 +78,15 @@ func (s *Selector) Unwrap(metadata *C.Metadata) C.Proxy {
 }
 
 func (s *Selector) selectedProxy(touch bool) C.Proxy {
+	var groupTypes = map[string]string{"Relay": "1", "Selector": "1", "Fallback": "1", "URLTest": "1", "LoadBalance": "1"}
 	elm, _, _ := s.single.Do(func() (interface{}, error) {
 		proxies := getProvidersProxies(s.providers, touch)
 		for _, proxy := range proxies {
-			if proxy.Name() == s.selected && (proxy.Alive() || !s.autoBackup) {
-				return proxy, nil
+			if proxy.Name() == s.selected {
+				_, groupType := groupTypes[proxy.Type().String()]
+				if groupType || proxy.Alive() || !s.autoBackup {
+					return proxy, nil
+				}
 			}
 		}
 		fast := proxies[0]
