@@ -72,11 +72,13 @@ func ApplyConfig(cfg *config.Config, force bool) {
 	updateUsers(cfg.Users)
 	updateDNS(cfg.DNS)
 	updateGeneral(cfg.General, force)
+	log.SetLevel(log.INFO)
 	updateProxies(cfg.Proxies, cfg.Providers)
 	updateRules(cfg.Rules)
 	updateHosts(cfg.Hosts)
 	updateExperimental(cfg)
 	updateProfile(cfg)
+	log.SetLevel(cfg.General.LogLevel)
 }
 
 func GetGeneral() *config.General {
@@ -165,7 +167,7 @@ func updateRules(rules []C.Rule) {
 }
 
 func updateGeneral(general *config.General, force bool) {
-	log.SetLevel(general.LogLevel)
+	log.SetLevel(log.INFO)
 	tunnel.SetMode(general.Mode)
 	resolver.DisableIPv6 = !general.IPv6
 
@@ -178,6 +180,7 @@ func updateGeneral(general *config.General, force bool) {
 	}
 
 	if !force {
+		log.SetLevel(general.LogLevel)
 		return
 	}
 
@@ -211,6 +214,7 @@ func updateGeneral(general *config.General, force bool) {
 		log.Errorln("Start Tun interface error: %s", err.Error())
 	}
 
+	log.SetLevel(general.LogLevel)
 }
 
 func updateUsers(users []auth.AuthUser) {

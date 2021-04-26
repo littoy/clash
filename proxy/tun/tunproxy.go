@@ -74,6 +74,7 @@ func NewTunProxy(deviceURL string) (TunAdapter, error) {
 	ipstack.SetSpoofing(nicID, true)        // Otherwise our TCP connection can not find the route backward
 
 	// Add route for ipv4 & ipv6
+	// So FindRoute will return correct route to tun NIC
 	subnet, _ := tcpip.NewSubnet(tcpip.Address(strings.Repeat("\x00", 4)), tcpip.AddressMask(strings.Repeat("\x00", 4)))
 	ipstack.AddRoute(tcpip.Route{Destination: subnet, Gateway: "", NIC: nicID})
 	subnet, _ = tcpip.NewSubnet(tcpip.Address(strings.Repeat("\x00", 6)), tcpip.AddressMask(strings.Repeat("\x00", 6)))
@@ -93,6 +94,15 @@ func NewTunProxy(deviceURL string) (TunAdapter, error) {
 		r.Complete(false)
 
 		conn := gonet.NewTCPConn(&wq, ep)
+
+		// if the endpoint is not in connected state, conn.RemoteAddr() will return nil
+		// this protection may be not enough, but will help us debug the panic
+		if conn.RemoteAddr() == nil {
+			log.Warnln("TCP endpoint is not connected, current state: %v", tcp.EndpointState(ep.State()))
+			conn.Close()
+			return
+		}
+
 		target := getAddr(ep.Info().(*stack.TransportEndpointInfo).ID)
 		tunnel.Add(adapters.NewSocket(target, conn, C.TUN))
 
@@ -124,7 +134,7 @@ func (t *tunAdapter) DeviceURL() string {
 func (t *tunAdapter) udpHandlePacket(id stack.TransportEndpointID, pkt *stack.PacketBuffer) bool {
 	// ref: gvisor pkg/tcpip/transport/udp/endpoint.go HandlePacket
 	hdr := header.UDP(pkt.TransportHeader().View())
-	if int(hdr.Length()) > pkt.Data.Size()+header.UDPMinimumSize {
+	if int(hdr.Length()) > pkt.Data().Size()+header.UDPMinimumSize {
 		// Malformed packet.
 		t.ipstack.Stats().UDP.MalformedPacketsReceived.Increment()
 		return true
@@ -136,7 +146,7 @@ func (t *tunAdapter) udpHandlePacket(id stack.TransportEndpointID, pkt *stack.Pa
 		id:      id,
 		pkt:     pkt,
 		s:       t.ipstack,
-		payload: pkt.Data.ToView(),
+		payload: pkt.Data().AsRange().ToOwnedView(),
 	}
 	tunnel.AddPacket(adapters.NewPacket(target, packet, C.TUN))
 
