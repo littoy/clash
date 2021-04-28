@@ -167,6 +167,12 @@ func (p *Proxy) Dial(metadata *C.Metadata) (C.Conn, error) {
 }
 
 func (p *Proxy) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn, error) {
+	_, deadlineSeted := ctx.Deadline()
+	var cancel context.CancelFunc = nil
+	if !deadlineSeted {
+		ctx, cancel = context.WithTimeout(ctx, tcpTimeout)
+		defer cancel()
+	}
 	conn, err := p.ProxyAdapter.DialContext(ctx, metadata)
 	if err != nil {
 		p.SetFailCount(p.FailCount() + 1)
