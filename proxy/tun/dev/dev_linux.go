@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"os/exec"
 	"strconv"
 	"sync"
 	"syscall"
@@ -298,5 +299,12 @@ func (t *tunLinux) getName() (string, error) {
 
 // GetAutoDetectInterface get ethernet interface
 func GetAutoDetectInterface() (string, error) {
-	return "", nil
+	cmd := exec.Command("bash", "-c", "ip route show | grep 'default via' | awk -F ' ' 'NR==1{print $5}' | xargs echo -n")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+	return out.String(), nil
 }

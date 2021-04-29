@@ -3,11 +3,13 @@
 package dev
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net"
 	"net/url"
 	"os"
+	"os/exec"
 	"sync"
 	"syscall"
 	"unsafe"
@@ -554,5 +556,12 @@ func (t *tunDarwin) attachLinkLocal() error {
 
 // GetAutoDetectInterface get ethernet interface
 func GetAutoDetectInterface() (string, error) {
-	return "", nil
+	cmd := exec.Command("bash", "-c", "netstat -rnf inet | grep 'default' | awk -F ' ' 'NR==1{print $6}' | xargs echo -n")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+	return out.String(), nil
 }

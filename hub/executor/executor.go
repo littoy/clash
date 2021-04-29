@@ -174,11 +174,15 @@ func updateGeneral(general *config.General, force bool) {
 
 	if general.Tun.Enable {
 		autoDetectInterfaceName, err := dev.GetAutoDetectInterface()
-		if err == nil && autoDetectInterfaceName != "" {
-			general.Interface = autoDetectInterfaceName
-			log.Infoln("Use auto detect interface: %s", general.Interface)
+		if err == nil {
+			if autoDetectInterfaceName != "" && autoDetectInterfaceName != "<nil>" {
+				general.Interface = autoDetectInterfaceName
+				log.Infoln("Use auto detect interface: %s", general.Interface)
+			} else {
+				log.Debugln("Auto detect interface is empty.")
+			}
 		} else {
-			log.Debugln("Failed to find auto detect interface. %v", err)
+			log.Debugln("Can not find auto detect interface. %v", err)
 		}
 	}
 
