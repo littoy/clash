@@ -21,6 +21,7 @@ import (
 	"github.com/Dreamacro/clash/log"
 	P "github.com/Dreamacro/clash/proxy"
 	authStore "github.com/Dreamacro/clash/proxy/auth"
+	"github.com/Dreamacro/clash/proxy/tun/dev"
 	"github.com/Dreamacro/clash/tunnel"
 )
 
@@ -72,7 +73,7 @@ func ApplyConfig(cfg *config.Config, force bool) {
 	updateUsers(cfg.Users)
 	updateDNS(cfg.DNS)
 	updateGeneral(cfg.General, force)
-	log.SetLevel(log.INFO)
+	log.SetLevel(log.DEBUG)
 	updateProxies(cfg.Proxies, cfg.Providers)
 	updateRules(cfg.Rules)
 	updateHosts(cfg.Hosts)
@@ -167,9 +168,19 @@ func updateRules(rules []C.Rule) {
 }
 
 func updateGeneral(general *config.General, force bool) {
-	log.SetLevel(log.INFO)
+	log.SetLevel(log.DEBUG)
 	tunnel.SetMode(general.Mode)
 	resolver.DisableIPv6 = !general.IPv6
+
+	if general.Tun.Enable {
+		autoDetectInterfaceName, err := dev.GetAutoDetectInterface()
+		if err == nil && autoDetectInterfaceName != "" {
+			general.Interface = autoDetectInterfaceName
+			log.Infoln("Use auto detect interface: %s", general.Interface)
+		} else {
+			log.Debugln("Failed to find auto detect interface. %v", err)
+		}
+	}
 
 	if general.Interface != "" {
 		dialer.DialHook = dialer.DialerWithInterface(general.Interface)
@@ -258,4 +269,8 @@ func patchSelectGroup(proxies map[string]C.Proxy) {
 
 		selector.Set(selected)
 	}
+}
+
+func CleanUp() {
+	P.CleanUp()
 }

@@ -35,6 +35,9 @@ var (
 	udpTimeout = 60 * time.Second
 
 	preProcess, _ = R.NewProcess("", "")
+
+	fakeIpMask  = net.IPv4Mask(0, 0, 0xff, 0xff)
+	fakeIpMaxIp = net.IPv4(0, 0, 255, 255)
 )
 
 func init() {
@@ -146,7 +149,7 @@ func preHandleMetadata(metadata *C.Metadata) error {
 				// redir-host should lookup the hosts
 				metadata.DstIP = node.Data.(net.IP)
 			}
-		} else if resolver.IsFakeIP(metadata.DstIP) {
+		} else if resolver.IsFakeIP(metadata.DstIP) && !fakeIpMaxIp.Equal(metadata.DstIP.Mask(fakeIpMask)) {
 			return fmt.Errorf("fake DNS record %s missing", metadata.DstIP)
 		}
 	}

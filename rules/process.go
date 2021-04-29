@@ -24,7 +24,7 @@ func (ps *Process) RuleType() C.RuleType {
 }
 
 func (ps *Process) Match(metadata *C.Metadata) bool {
-	if runtime.GOOS != "darwin" {
+	if runtime.GOARCH == "arm64" {
 		return false
 	}
 

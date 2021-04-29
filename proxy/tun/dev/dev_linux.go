@@ -295,3 +295,8 @@ func (t *tunLinux) getName() (string, error) {
 	t.name = string(nullStr)
 	return t.name, nil
 }
+
+// GetAutoDetectInterface get ethernet interface
+func GetAutoDetectInterface() (string, error) {
+	return "", nil
+}

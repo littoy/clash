@@ -119,11 +119,11 @@ func NewTunProxy(deviceURL string) (TunAdapter, error) {
 
 // Close close the TunAdapter
 func (t *tunAdapter) Close() {
-	t.device.Close()
 	if t.dnsserver != nil {
 		t.dnsserver.Stop()
 	}
 	t.ipstack.Close()
+	t.device.Close()
 }
 
 // IfName return device URL of tun

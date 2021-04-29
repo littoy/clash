@@ -551,3 +551,8 @@ func (t *tunDarwin) attachLinkLocal() error {
 
 	return nil
 }
+
+// GetAutoDetectInterface get ethernet interface
+func GetAutoDetectInterface() (string, error) {
+	return "", nil
+}

@@ -1,4 +1,4 @@
-// +build !linux,!android,!darwin
+// +build !linux,!android,!darwin,!windows
 
 package dev
 
@@ -11,4 +11,9 @@ import (
 
 func OpenTunDevice(_ url.URL) (TunDevice, error) {
 	return nil, errors.New("Unsupported platform " + runtime.GOOS + "/" + runtime.GOARCH)
+}
+
+// GetAutoDetectInterface get ethernet interface
+func GetAutoDetectInterface() (string, error) {
+	return "", nil
 }

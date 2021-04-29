@@ -369,12 +369,6 @@ func delSystemRoute(net string) {
 	//}
 }
 
-// doWindowsSystemRoute execute windows route command
-func doWindowsSystemRoute(action string, dest string, netMask string) {
-	cmd := exec.Command("route", action, dest, "mask", netMask, "198.18.0.1")
-	_ = cmd.Run()
-}
-
 // GetPorts return the ports of proxy servers
 func GetPorts() *Ports {
 	ports := &Ports{}
@@ -429,4 +423,13 @@ func genAddr(host string, port int, allowLan bool) string {
 	}
 
 	return fmt.Sprintf("127.0.0.1:%d", port)
+}
+
+// CleanUp clean up something
+func CleanUp() {
+	if runtime.GOOS == "windows" {
+		if tunAdapter != nil {
+			tunAdapter.Close()
+		}
+	}
 }
