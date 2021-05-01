@@ -77,7 +77,7 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 		//if v.option.TLS {
 		wsOpts.TLS = true
 		wsOpts.SessionCache = getClientSessionCache()
-		//wsOpts.SkipCertVerify = v.option.SkipCertVerify
+		wsOpts.SkipCertVerify = v.option.SkipCertVerify
 		wsOpts.ServerName = v.option.ServerName
 		//}
 		c, err = vmess.StreamWebsocketConn(c, wsOpts, nil)
@@ -90,9 +90,9 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 		host, _, _ := net.SplitHostPort(v.addr)
 
 		tlsConfig := &tls.Config{
-			NextProtos: alpn,
-			MinVersion: tls.VersionTLS12,
-			//InsecureSkipVerify: v.option.SkipCertVerify,
+			NextProtos:         alpn,
+			MinVersion:         tls.VersionTLS12,
+			InsecureSkipVerify: v.option.SkipCertVerify,
 			ServerName:         host,
 			ClientSessionCache: getClientSessionCache(),
 		}

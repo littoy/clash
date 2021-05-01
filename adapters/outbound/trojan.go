@@ -196,9 +196,9 @@ func NewTrojan(option TrojanOption) (*Trojan, error) {
 		}
 
 		tlsConfig := &tls.Config{
-			NextProtos: option.ALPN,
-			MinVersion: tls.VersionTLS12,
-			//InsecureSkipVerify: tOption.SkipCertVerify,
+			NextProtos:         option.ALPN,
+			MinVersion:         tls.VersionTLS12,
+			InsecureSkipVerify: tOption.SkipCertVerify,
 			ServerName:         tOption.ServerName,
 			ClientSessionCache: getClientSessionCache(),
 		}
