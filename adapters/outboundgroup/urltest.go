@@ -68,15 +68,12 @@ func (u *URLTest) fast(touch bool) C.Proxy {
 		oldFast := u.fastNode
 		u.fastNode = nil
 		min := fast.LastDelay()
-		if oldFast != nil {
-			for _, proxy := range proxies[:] {
-				if proxy.Name() == oldFast.Name() {
-					u.fastNode = oldFast
-					break
-				}
-			}
-		}
+
 		for _, proxy := range proxies[1:] {
+			if oldFast != nil && u.fastNode == nil && proxy.Name() == oldFast.Name() {
+				u.fastNode = oldFast
+			}
+
 			if !proxy.Alive() {
 				continue
 			}
