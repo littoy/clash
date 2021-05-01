@@ -21,6 +21,7 @@ const (
 	REDIR
 	TPROXY
 	SHADOWSOCKS
+	TUN
 )
 
 type NetWork int
@@ -52,6 +53,8 @@ func (t Type) String() string {
 		return "TProxy"
 	case SHADOWSOCKS:
 		return "ss"
+	case TUN:
+		return "Tun"
 	default:
 		return "Unknown"
 	}
@@ -71,6 +74,7 @@ type Metadata struct {
 	DstPort  string  `json:"destinationPort"`
 	AddrType int     `json:"-"`
 	Host     string  `json:"host"`
+	Process  string  `json:"process"`
 }
 
 func (m *Metadata) RemoteAddress() string {

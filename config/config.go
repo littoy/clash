@@ -41,6 +41,7 @@ type Inbound struct {
 	TProxyPort     int      `json:"tproxy-port"`
 	MixedPort      int      `json:"mixed-port"`
 	ShadowsocksURL string   `json:"shadowsocks"`
+	Tun            Tun      `json:"tun"`
 	Authentication []string `json:"authentication"`
 	AllowLan       bool     `json:"allow-lan"`
 	BindAddress    string   `json:"bind-address"`
@@ -79,12 +80,21 @@ type Profile struct {
 	StoreSelected bool `yaml:"store-selected"`
 }
 
+// Tun config
+type Tun struct {
+	Enable         bool   `yaml:"enable" json:"enable"`
+	DeviceURL      string `yaml:"device-url" json:"device-url"`
+	DNSListen      string `yaml:"dns-listen" json:"dns-listen"`
+	MacOSAutoRoute bool   `yaml:"macOS-auto-route" json:"macOS-auto-route"`
+}
+
 // Experimental config
 type Experimental struct{}
 
 // Config is clash config manager
 type Config struct {
 	General      *General
+	Tun          *Tun
 	DNS          *DNS
 	Experimental *Experimental
 	Hosts        *trie.DomainTrie
@@ -136,6 +146,7 @@ type RawConfig struct {
 	ProxyProvider map[string]map[string]interface{} `yaml:"proxy-providers"`
 	Hosts         map[string]string                 `yaml:"hosts"`
 	DNS           RawDNS                            `yaml:"dns"`
+	Tun           Tun                               `yaml:"tun"`
 	Experimental  Experimental                      `yaml:"experimental"`
 	Profile       Profile                           `yaml:"profile"`
 	Proxy         []map[string]interface{}          `yaml:"proxies"`
@@ -165,6 +176,12 @@ func UnmarshalRawConfig(buf []byte) (*RawConfig, error) {
 		Rule:           []string{},
 		Proxy:          []map[string]interface{}{},
 		ProxyGroup:     []map[string]interface{}{},
+		Tun: Tun{
+			Enable:         false,
+			DeviceURL:      "dev://clash0",
+			DNSListen:      "",
+			MacOSAutoRoute: false,
+		},
 		DNS: RawDNS{
 			Enable:      false,
 			UseHosts:    true,
@@ -175,7 +192,7 @@ func UnmarshalRawConfig(buf []byte) (*RawConfig, error) {
 			},
 			DefaultNameserver: []string{
 				"114.114.114.114",
-				"8.8.8.8",
+				"223.5.5.5",
 			},
 		},
 		Profile: Profile{
@@ -254,6 +271,7 @@ func parseGeneral(cfg *RawConfig) (*General, error) {
 			ShadowsocksURL: cfg.ShadowsocksURL,
 			AllowLan:       cfg.AllowLan,
 			BindAddress:    cfg.BindAddress,
+			Tun:            cfg.Tun,
 		},
 		Controller: Controller{
 			ExternalController: cfg.ExternalController,

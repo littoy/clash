@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -23,6 +24,15 @@ func (ps *Process) RuleType() C.RuleType {
 }
 
 func (ps *Process) Match(metadata *C.Metadata) bool {
+	if runtime.GOARCH == "arm64" {
+		return false
+	}
+
+	if metadata.Process != "" {
+		//log.Debugln("Use cache process: %s", metadata.Process)
+		return strings.EqualFold(metadata.Process, ps.process)
+	}
+
 	key := fmt.Sprintf("%s:%s:%s", metadata.NetWork.String(), metadata.SrcIP.String(), metadata.SrcPort)
 	cached, hit := processCache.Get(key)
 	if !hit {
@@ -42,7 +52,9 @@ func (ps *Process) Match(metadata *C.Metadata) bool {
 		cached = name
 	}
 
-	return strings.EqualFold(cached.(string), ps.process)
+	metadata.Process = cached.(string)
+
+	return strings.EqualFold(metadata.Process, ps.process)
 }
 
 func (ps *Process) Adapter() string {

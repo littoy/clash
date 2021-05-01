@@ -4,15 +4,21 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"os/exec"
+	"runtime"
 	"strconv"
 	"sync"
 
+	"github.com/Dreamacro/clash/component/resolver"
+	"github.com/Dreamacro/clash/config"
+	"github.com/Dreamacro/clash/dns"
 	"github.com/Dreamacro/clash/log"
 	"github.com/Dreamacro/clash/proxy/http"
 	"github.com/Dreamacro/clash/proxy/mixed"
 	"github.com/Dreamacro/clash/proxy/redir"
 	"github.com/Dreamacro/clash/proxy/shadowsocks"
 	"github.com/Dreamacro/clash/proxy/socks"
+	"github.com/Dreamacro/clash/proxy/tun"
 	"github.com/Dreamacro/go-shadowsocks2/core"
 )
 
@@ -31,6 +37,7 @@ var (
 	tproxyUDPListener      *redir.RedirUDPListener
 	mixedListener          *mixed.MixedListener
 	mixedUDPLister         *socks.SockUDPListener
+	tunAdapter             tun.TunAdapter
 
 	// lock for recreate function
 	socksMux       sync.Mutex
@@ -39,6 +46,7 @@ var (
 	tproxyMux      sync.Mutex
 	mixedMux       sync.Mutex
 	shadowsocksMux sync.Mutex
+	tunMux         sync.Mutex
 )
 
 type Ports struct {
@@ -59,6 +67,18 @@ func BindAddress() string {
 
 func SetAllowLan(al bool) {
 	allowLan = al
+}
+
+func Tun() config.Tun {
+	if tunAdapter == nil {
+		return config.Tun{}
+	}
+	return config.Tun{
+		Enable:         true,
+		DeviceURL:      tunAdapter.DeviceURL(),
+		DNSListen:      tunAdapter.DNSListen(),
+		MacOSAutoRoute: true,
+	}
 }
 
 func SetBindAddress(host string) {
@@ -349,6 +369,87 @@ func ReCreateShadowSocks(shadowsocksURL string) error {
 
 	return nil
 }
+func ReCreateTun(conf config.Tun) error {
+	tunMux.Lock()
+	defer tunMux.Unlock()
+
+	enable := conf.Enable
+	url := conf.DeviceURL
+
+	if tunAdapter != nil {
+		if enable && (url == "" || url == tunAdapter.DeviceURL()) {
+			// Though we don't need to recreate tun device, we should update tun DNSServer
+			return tunAdapter.ReCreateDNSServer(resolver.DefaultResolver.(*dns.Resolver), resolver.DefaultHostMapper.(*dns.ResolverEnhancer), conf.DNSListen)
+		}
+		tunAdapter.Close()
+		tunAdapter = nil
+		if conf.MacOSAutoRoute {
+			removeMacOSAutoRoute()
+		}
+	}
+	if !enable {
+		return nil
+	}
+	var err error
+	tunAdapter, err = tun.NewTunProxy(url)
+	if err != nil {
+		return err
+	}
+
+	if conf.MacOSAutoRoute {
+		setMacOSAutoRoute()
+	}
+
+	if resolver.DefaultResolver != nil {
+		return tunAdapter.ReCreateDNSServer(resolver.DefaultResolver.(*dns.Resolver), resolver.DefaultHostMapper.(*dns.ResolverEnhancer), conf.DNSListen)
+	}
+	return nil
+}
+
+func setMacOSAutoRoute() {
+	if runtime.GOOS == "darwin" {
+		log.Infoln("[MacOS auto route]Add system route.")
+		addSystemRoute("1")
+		addSystemRoute("2/7")
+		addSystemRoute("4/6")
+		addSystemRoute("8/5")
+		addSystemRoute("16/4")
+		addSystemRoute("32/3")
+		addSystemRoute("64/2")
+		addSystemRoute("128.0/1")
+		addSystemRoute("198.18.0/16")
+	}
+}
+
+func removeMacOSAutoRoute() {
+	if runtime.GOOS == "darwin" {
+		log.Infoln("[MacOS auto route]Remove system route.")
+		delSystemRoute("1")
+		delSystemRoute("2/7")
+		delSystemRoute("4/6")
+		delSystemRoute("8/5")
+		delSystemRoute("16/4")
+		delSystemRoute("32/3")
+		delSystemRoute("64/2")
+		delSystemRoute("128.0/1")
+		delSystemRoute("198.18.0/16")
+	}
+}
+
+func addSystemRoute(net string) {
+	cmd := exec.Command("route", "add", "-net", net, "198.18.0.1")
+	if err := cmd.Run(); err != nil {
+		log.Errorln("[MacOS auto route]Failed to add system route: %s, cmd: %s", err.Error(), cmd.String())
+	}
+}
+
+func delSystemRoute(net string) {
+	cmd := exec.Command("route", "delete", "-net", net, "198.18.0.1")
+	_ = cmd.Run()
+	//if err := cmd.Run(); err != nil {
+	//	log.Errorln("[MacOS auto route]Failed to delete system route: %s, cmd: %s", err.Error(), cmd.String())
+	//}
+}
 
 // GetPorts return the ports of proxy servers
 func GetPorts() *Ports {
@@ -404,4 +505,13 @@ func genAddr(host string, port int, allowLan bool) string {
 	}
 
 	return fmt.Sprintf("127.0.0.1:%d", port)
+}
+
+// CleanUp clean up something
+func CleanUp() {
+	if runtime.GOOS == "windows" {
+		if tunAdapter != nil {
+			tunAdapter.Close()
+		}
+	}
 }

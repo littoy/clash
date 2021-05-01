@@ -21,6 +21,7 @@ import (
 	"github.com/Dreamacro/clash/log"
 	P "github.com/Dreamacro/clash/proxy"
 	authStore "github.com/Dreamacro/clash/proxy/auth"
+	"github.com/Dreamacro/clash/proxy/tun/dev"
 	"github.com/Dreamacro/clash/tunnel"
 )
 
@@ -70,13 +71,15 @@ func ApplyConfig(cfg *config.Config, force bool) {
 	defer mux.Unlock()
 
 	updateUsers(cfg.Users)
+	updateDNS(cfg.DNS)
 	updateGeneral(cfg.General, force)
+	log.SetLevel(log.DEBUG)
 	updateProxies(cfg.Proxies, cfg.Providers)
 	updateRules(cfg.Rules)
-	updateDNS(cfg.DNS)
 	updateHosts(cfg.Hosts)
 	updateExperimental(cfg)
 	updateProfile(cfg)
+	log.SetLevel(cfg.General.LogLevel)
 }
 
 func GetGeneral() *config.General {
@@ -93,6 +96,7 @@ func GetGeneral() *config.General {
 			RedirPort:      ports.RedirPort,
 			TProxyPort:     ports.TProxyPort,
 			MixedPort:      ports.MixedPort,
+			Tun:            P.Tun(),
 			Authentication: authenticator,
 			AllowLan:       P.AllowLan(),
 			BindAddress:    P.BindAddress(),
@@ -164,9 +168,23 @@ func updateRules(rules []C.Rule) {
 }
 
 func updateGeneral(general *config.General, force bool) {
-	log.SetLevel(general.LogLevel)
+	log.SetLevel(log.DEBUG)
 	tunnel.SetMode(general.Mode)
 	resolver.DisableIPv6 = !general.IPv6
+
+	if general.Tun.Enable {
+		autoDetectInterfaceName, err := dev.GetAutoDetectInterface()
+		if err == nil {
+			if autoDetectInterfaceName != "" && autoDetectInterfaceName != "<nil>" {
+				general.Interface = autoDetectInterfaceName
+				log.Infoln("Use auto detect interface: %s", general.Interface)
+			} else {
+				log.Debugln("Auto detect interface is empty.")
+			}
+		} else {
+			log.Debugln("Can not find auto detect interface. %v", err)
+		}
+	}
 
 	if general.Interface != "" {
 		dialer.DialHook = dialer.DialerWithInterface(general.Interface)
@@ -177,6 +195,7 @@ func updateGeneral(general *config.General, force bool) {
 	}
 
 	if !force {
+		log.SetLevel(general.LogLevel)
 		return
 	}
 
@@ -209,6 +228,11 @@ func updateGeneral(general *config.General, force bool) {
 	if err := P.ReCreateShadowSocks(general.ShadowsocksURL); err != nil {
 		log.Errorln("Start ShadowSocks server error: %s", err.Error())
 	}
+	if err := P.ReCreateTun(general.Tun); err != nil {
+		log.Errorln("Start Tun interface error: %s", err.Error())
+	}
+
+	log.SetLevel(general.LogLevel)
 }
 
 func updateUsers(users []auth.AuthUser) {
@@ -252,4 +276,8 @@ func patchSelectGroup(proxies map[string]C.Proxy) {
 
 		selector.Set(selected)
 	}
+}
+
+func CleanUp() {
+	P.CleanUp()
 }

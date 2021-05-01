@@ -40,6 +40,7 @@ type Socks5Option struct {
 	MaxFail        int    `proxy:"max-fail,omitempty"`
 }
 
+// StreamConn implements C.ProxyAdapter
 func (ss *Socks5) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 	if ss.tls {
 		cc := tls.Client(c, ss.tlsConfig)
@@ -63,6 +64,7 @@ func (ss *Socks5) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error)
 	return c, nil
 }
 
+// DialContext implements C.ProxyAdapter
 func (ss *Socks5) DialContext(ctx context.Context, metadata *C.Metadata) (_ C.Conn, err error) {
 	c, err := dialer.DialContext(ctx, "tcp", ss.addr)
 	if err != nil {
@@ -80,6 +82,7 @@ func (ss *Socks5) DialContext(ctx context.Context, metadata *C.Metadata) (_ C.Co
 	return NewConn(c, ss), nil
 }
 
+// DialUDP implements C.ProxyAdapter
 func (ss *Socks5) DialUDP(metadata *C.Metadata) (_ C.PacketConn, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), tcpTimeout)
 	defer cancel()

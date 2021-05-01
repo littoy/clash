@@ -24,6 +24,7 @@ func (f *Fallback) Now() string {
 	return proxy.Name()
 }
 
+// DialContext implements C.ProxyAdapter
 func (f *Fallback) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn, error) {
 	proxy := f.findAliveProxy(true)
 	c, err := proxy.DialContext(ctx, metadata)
@@ -33,6 +34,7 @@ func (f *Fallback) DialContext(ctx context.Context, metadata *C.Metadata) (C.Con
 	return c, err
 }
 
+// DialUDP implements C.ProxyAdapter
 func (f *Fallback) DialUDP(metadata *C.Metadata) (C.PacketConn, error) {
 	proxy := f.findAliveProxy(true)
 	pc, err := proxy.DialUDP(metadata)
@@ -42,6 +44,7 @@ func (f *Fallback) DialUDP(metadata *C.Metadata) (C.PacketConn, error) {
 	return pc, err
 }
 
+// SupportUDP implements C.ProxyAdapter
 func (f *Fallback) SupportUDP() bool {
 	if f.disableUDP {
 		return false
@@ -51,6 +54,7 @@ func (f *Fallback) SupportUDP() bool {
 	return proxy.SupportUDP()
 }
 
+// MarshalJSON implements C.ProxyAdapter
 func (f *Fallback) MarshalJSON() ([]byte, error) {
 	var all []string
 	for _, proxy := range f.proxies(false) {
@@ -63,6 +67,7 @@ func (f *Fallback) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// Unwrap implements C.ProxyAdapter
 func (f *Fallback) Unwrap(metadata *C.Metadata) C.Proxy {
 	proxy := f.findAliveProxy(true)
 	return proxy
