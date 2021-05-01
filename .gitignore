@@ -20,4 +20,4 @@ vendor
 
 # macOS file
 .DS_Store
-go.sum
+clash
