@@ -19,6 +19,7 @@ const (
 	Http
 	Vmess
 	Trojan
+	Vless
 
 	Relay
 	Selector

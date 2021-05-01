@@ -48,6 +48,11 @@ type VlessOption struct {
 	WSHeaders      map[string]string `proxy:"ws-headers,omitempty"`
 	SkipCertVerify bool              `proxy:"skip-cert-verify,omitempty"`
 	ServerName     string            `proxy:"servername,omitempty"`
+	Timeout        int               `proxy:"timeout,omitempty"`
+	MaxLoss        int               `proxy:"max-loss,omitempty"`
+	ForbidDuration int               `proxy:"forbid-duration,omitempty"`
+	MaxFail        int               `proxy:"max-fail,omitempty"`
+	PingServer     string            `proxy:"ping-server,omitempty"`
 }
 
 func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
@@ -70,12 +75,12 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 		}
 
 		//if v.option.TLS {
-			wsOpts.TLS = true
-			wsOpts.SessionCache = getClientSessionCache()
-			//wsOpts.SkipCertVerify = v.option.SkipCertVerify
-			wsOpts.ServerName = v.option.ServerName
+		wsOpts.TLS = true
+		wsOpts.SessionCache = getClientSessionCache()
+		//wsOpts.SkipCertVerify = v.option.SkipCertVerify
+		wsOpts.ServerName = v.option.ServerName
 		//}
-		c, err = vmess.StreamWebsocketConn(c, wsOpts)
+		c, err = vmess.StreamWebsocketConn(c, wsOpts, nil)
 	default:
 		alpn := defaultALPN
 		if len(v.option.ALPN) != 0 {
@@ -154,10 +159,15 @@ func NewVless(option VlessOption) (*Vless, error) {
 
 	return &Vless{
 		Base: &Base{
-			name: option.Name,
-			addr: net.JoinHostPort(option.Server, strconv.Itoa(option.Port)),
-			tp:   C.Vless,
-			udp:  option.UDP,
+			name:           option.Name,
+			addr:           net.JoinHostPort(option.Server, strconv.Itoa(option.Port)),
+			tp:             C.Vless,
+			udp:            option.UDP,
+			timeout:        option.Timeout,
+			maxloss:        option.MaxLoss,
+			forbidDuration: option.ForbidDuration,
+			maxFail:        option.MaxFail,
+			pingAddr:       option.PingServer,
 		},
 		client: client,
 		option: &option,
