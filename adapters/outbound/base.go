@@ -30,32 +30,39 @@ type Base struct {
 	downFrom       int64
 }
 
+// Name implements C.ProxyAdapter
 func (b *Base) Name() string {
 	return b.name
 }
 
+// Type implements C.ProxyAdapter
 func (b *Base) Type() C.AdapterType {
 	return b.tp
 }
 
+// StreamConn implements C.ProxyAdapter
 func (b *Base) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 	return c, errors.New("no support")
 }
 
+// DialUDP implements C.ProxyAdapter
 func (b *Base) DialUDP(metadata *C.Metadata) (C.PacketConn, error) {
 	return nil, errors.New("no support")
 }
 
+// SupportUDP implements C.ProxyAdapter
 func (b *Base) SupportUDP() bool {
 	return b.udp
 }
 
+// MarshalJSON implements C.ProxyAdapter
 func (b *Base) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]string{
 		"type": b.Type().String(),
 	})
 }
 
+// Addr implements C.ProxyAdapter
 func (b *Base) Addr() string {
 	return b.addr
 }
@@ -108,6 +115,7 @@ func (b *Base) Forbid() bool {
 	return b.forbidDuration > 0 && (time.Now().Unix()-b.downFrom) < int64(b.forbidDuration)
 }
 
+// Unwrap implements C.ProxyAdapter
 func (b *Base) Unwrap(metadata *C.Metadata) C.Proxy {
 	return nil
 }
@@ -121,10 +129,12 @@ type conn struct {
 	chain C.Chain
 }
 
+// Chains implements C.Connection
 func (c *conn) Chains() C.Chain {
 	return c.chain
 }
 
+// AppendToChains implements C.Connection
 func (c *conn) AppendToChains(a C.ProxyAdapter) {
 	c.chain = append(c.chain, a.Name())
 }
@@ -138,10 +148,12 @@ type packetConn struct {
 	chain C.Chain
 }
 
+// Chains implements C.Connection
 func (c *packetConn) Chains() C.Chain {
 	return c.chain
 }
 
+// AppendToChains implements C.Connection
 func (c *packetConn) AppendToChains(a C.ProxyAdapter) {
 	c.chain = append(c.chain, a.Name())
 }
@@ -156,16 +168,19 @@ type Proxy struct {
 	alive   *atomic.Bool
 }
 
+// Alive implements C.Proxy
 func (p *Proxy) Alive() bool {
 	return p.alive.Load() && (!p.Forbid())
 }
 
+// Dial implements C.Proxy
 func (p *Proxy) Dial(metadata *C.Metadata) (C.Conn, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), tcpTimeout)
 	defer cancel()
 	return p.DialContext(ctx, metadata)
 }
 
+// DialContext implements C.ProxyAdapter
 func (p *Proxy) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn, error) {
 	_, deadlineSeted := ctx.Deadline()
 	var cancel context.CancelFunc = nil
@@ -186,6 +201,7 @@ func (p *Proxy) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn, 
 	return conn, err
 }
 
+// DelayHistory implements C.Proxy
 func (p *Proxy) DelayHistory() []C.DelayHistory {
 	queue := p.history.Copy()
 	histories := []C.DelayHistory{}
@@ -196,6 +212,7 @@ func (p *Proxy) DelayHistory() []C.DelayHistory {
 }
 
 // LastDelay return last history record. if proxy is not alive, return the max value of uint16.
+// implements C.Proxy
 func (p *Proxy) LastDelay() (delay uint16) {
 	var max uint16 = 0xffff
 	if !p.alive.Load() {
@@ -231,6 +248,7 @@ func (p *Proxy) LastLoss() (delay uint16) {
 	return history.Loss
 }
 
+// MarshalJSON implements C.ProxyAdapter
 func (p *Proxy) MarshalJSON() ([]byte, error) {
 	inner, err := p.ProxyAdapter.MarshalJSON()
 	if err != nil {
@@ -244,7 +262,7 @@ func (p *Proxy) MarshalJSON() ([]byte, error) {
 	return json.Marshal(mapping)
 }
 
-// URLTest get the delay for the specified URL
+// implements C.Proxy
 func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, err error) {
 	defer func() {
 		if err != nil || t >= uint16(p.Timeout()) || l >= uint16(p.MaxLoss()) {
