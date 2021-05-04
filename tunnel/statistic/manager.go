@@ -3,20 +3,18 @@ package statistic
 import (
 	"sync"
 	"time"
-
-	"go.uber.org/atomic"
 )
 
 var DefaultManager *Manager
 
 func init() {
 	DefaultManager = &Manager{
-		uploadTemp:    atomic.NewInt64(0),
-		downloadTemp:  atomic.NewInt64(0),
-		uploadBlip:    atomic.NewInt64(0),
-		downloadBlip:  atomic.NewInt64(0),
-		uploadTotal:   atomic.NewInt64(0),
-		downloadTotal: atomic.NewInt64(0),
+		uploadTemp:    0,
+		downloadTemp:  0,
+		uploadBlip:    0,
+		downloadBlip:  0,
+		uploadTotal:   0,
+		downloadTotal: 0,
 	}
 
 	go DefaultManager.handle()
@@ -24,12 +22,12 @@ func init() {
 
 type Manager struct {
 	connections   sync.Map
-	uploadTemp    *atomic.Int64
-	downloadTemp  *atomic.Int64
-	uploadBlip    *atomic.Int64
-	downloadBlip  *atomic.Int64
-	uploadTotal   *atomic.Int64
-	downloadTotal *atomic.Int64
+	uploadTemp    int64
+	downloadTemp  int64
+	uploadBlip    int64
+	downloadBlip  int64
+	uploadTotal   int64
+	downloadTotal int64
 }
 
 func (m *Manager) Join(c tracker) {
@@ -41,17 +39,17 @@ func (m *Manager) Leave(c tracker) {
 }
 
 func (m *Manager) PushUploaded(size int64) {
-	m.uploadTemp.Add(size)
-	m.uploadTotal.Add(size)
+	m.uploadTemp += size
+	m.uploadTotal += size
 }
 
 func (m *Manager) PushDownloaded(size int64) {
-	m.downloadTemp.Add(size)
-	m.downloadTotal.Add(size)
+	m.downloadTemp += size
+	m.downloadTotal += size
 }
 
 func (m *Manager) Now() (up int64, down int64) {
-	return m.uploadBlip.Load(), m.downloadBlip.Load()
+	return m.uploadBlip, m.downloadBlip
 }
 
 func (m *Manager) Snapshot() *Snapshot {
@@ -62,29 +60,29 @@ func (m *Manager) Snapshot() *Snapshot {
 	})
 
 	return &Snapshot{
-		UploadTotal:   m.uploadTotal.Load(),
-		DownloadTotal: m.downloadTotal.Load(),
+		UploadTotal:   m.uploadTotal,
+		DownloadTotal: m.downloadTotal,
 		Connections:   connections,
 	}
 }
 
 func (m *Manager) ResetStatistic() {
-	m.uploadTemp.Store(0)
-	m.uploadBlip.Store(0)
-	m.uploadTotal.Store(0)
-	m.downloadTemp.Store(0)
-	m.downloadBlip.Store(0)
-	m.downloadTotal.Store(0)
+	m.uploadTemp = 0
+	m.uploadBlip = 0
+	m.uploadTotal = 0
+	m.downloadTemp = 0
+	m.downloadBlip = 0
+	m.downloadTotal = 0
 }
 
 func (m *Manager) handle() {
 	ticker := time.NewTicker(time.Second)
 
 	for range ticker.C {
-		m.uploadBlip.Store(m.uploadTemp.Load())
-		m.uploadTemp.Store(0)
-		m.downloadBlip.Store(m.downloadTemp.Load())
-		m.downloadTemp.Store(0)
+		m.uploadBlip = m.uploadTemp
+		m.uploadTemp = 0
+		m.downloadBlip = m.downloadTemp
+		m.downloadTemp = 0
 	}
 }
 
