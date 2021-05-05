@@ -4,7 +4,7 @@
 //      protoc        v3.15.6
 // source: config.proto
 
-package gosite
+package geosite
 
 import (
 	//proto "github.com/golang/protobuf/proto"
@@ -89,7 +89,7 @@ type Domain struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Domain matching type.
-	Type Domain_Type `protobuf:"varint,1,opt,name=type,proto3,enum=clash.rules.gosite.Domain_Type" json:"type,omitempty"`
+	Type Domain_Type `protobuf:"varint,1,opt,name=type,proto3,enum=clash.rules.geosite.Domain_Type" json:"type,omitempty"`
 	// Domain value.
 	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	// Attributes of this domain. May be used for filtering.
@@ -566,22 +566,22 @@ func file_config_proto_rawDescGZIP() []byte {
 var file_config_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_config_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_config_proto_goTypes = []interface{}{
-	(Domain_Type)(0),         // 0: clash.rules.gosite.Domain.Type
-	(*Domain)(nil),           // 1: clash.rules.gosite.Domain
-	(*CIDR)(nil),             // 2: clash.rules.gosite.CIDR
-	(*GeoIP)(nil),            // 3: clash.rules.gosite.GeoIP
-	(*GeoIPList)(nil),        // 4: clash.rules.gosite.GeoIPList
-	(*GeoSite)(nil),          // 5: clash.rules.gosite.GeoSite
-	(*GeoSiteList)(nil),      // 6: clash.rules.gosite.GeoSiteList
-	(*Domain_Attribute)(nil), // 7: clash.rules.gosite.Domain.Attribute
+	(Domain_Type)(0),         // 0: clash.rules.geosite.Domain.Type
+	(*Domain)(nil),           // 1: clash.rules.geosite.Domain
+	(*CIDR)(nil),             // 2: clash.rules.geosite.CIDR
+	(*GeoIP)(nil),            // 3: clash.rules.geosite.GeoIP
+	(*GeoIPList)(nil),        // 4: clash.rules.geosite.GeoIPList
+	(*GeoSite)(nil),          // 5: clash.rules.geosite.GeoSite
+	(*GeoSiteList)(nil),      // 6: clash.rules.geosite.GeoSiteList
+	(*Domain_Attribute)(nil), // 7: clash.rules.geosite.Domain.Attribute
 }
 var file_config_proto_depIdxs = []int32{
-	0, // 0: clash.rules.gosite.Domain.type:type_name -> clash.rules.gosite.Domain.Type
-	7, // 1: clash.rules.gosite.Domain.attribute:type_name -> clash.rules.gosite.Domain.Attribute
-	2, // 2: clash.rules.gosite.GeoIP.cidr:type_name -> clash.rules.gosite.CIDR
-	3, // 3: clash.rules.gosite.GeoIPList.entry:type_name -> clash.rules.gosite.GeoIP
-	1, // 4: clash.rules.gosite.GeoSite.domain:type_name -> clash.rules.gosite.Domain
-	5, // 5: clash.rules.gosite.GeoSiteList.entry:type_name -> clash.rules.gosite.GeoSite
+	0, // 0: clash.rules.geosite.Domain.type:type_name -> clash.rules.geosite.Domain.Type
+	7, // 1: clash.rules.geosite.Domain.attribute:type_name -> clash.rules.geosite.Domain.Attribute
+	2, // 2: clash.rules.geosite.GeoIP.cidr:type_name -> clash.rules.geosite.CIDR
+	3, // 3: clash.rules.geosite.GeoIPList.entry:type_name -> clash.rules.geosite.GeoIP
+	1, // 4: clash.rules.geosite.GeoSite.domain:type_name -> clash.rules.geosite.Domain
+	5, // 5: clash.rules.geosite.GeoSiteList.entry:type_name -> clash.rules.geosite.GeoSite
 	6, // [6:6] is the sub-list for method output_type
 	6, // [6:6] is the sub-list for method input_type
 	6, // [6:6] is the sub-list for extension type_name

@@ -6,7 +6,7 @@ import (
 
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/log"
-	"github.com/Dreamacro/clash/rules/gosite"
+	"github.com/Dreamacro/clash/rules/geosite"
 )
 
 type GEOSITE struct {
@@ -27,7 +27,7 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 
 	domain := metadata.Host
 
-	matcher, err := gosite.NewDomainMatcher(g.country)
+	matcher, err := geosite.NewDomainMatcher(g.country)
 
 	if err != nil {
 		log.Errorln("Failed to get geosite matcher for country: %s, base error: %s", g.country, err.Error())

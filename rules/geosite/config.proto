@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package clash.rules.router;
-option csharp_namespace = "Clash.Rules.Router";
-option go_package = "github.com/Dreamacro/clash/rules/router";
-option java_package = "com.clash.rules.router";
+package clash.rules.geosite;
+option csharp_namespace = "Clash.Rules.Geosite";
+option go_package = "github.com/Dreamacro/clash/rules/geosite";
+option java_package = "com.clash.rules.geosite";
 option java_multiple_files = true;
 
 // Domain for routing decision.

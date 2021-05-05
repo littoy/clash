@@ -15,7 +15,7 @@ import (
 	"github.com/Dreamacro/clash/context"
 	"github.com/Dreamacro/clash/log"
 	R "github.com/Dreamacro/clash/rules"
-	"github.com/Dreamacro/clash/rules/gosite"
+	"github.com/Dreamacro/clash/rules/geosite"
 	"github.com/Dreamacro/clash/tunnel/statistic"
 )
 
@@ -66,7 +66,7 @@ func Rules() []C.Rule {
 func UpdateRules(newRules []C.Rule) {
 	configMux.Lock()
 	rules = newRules
-	gosite.UpdateGeoSiteRule(newRules)
+	geosite.UpdateGeoSiteRule(newRules)
 	configMux.Unlock()
 }
 

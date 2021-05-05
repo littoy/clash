@@ -1,4 +1,4 @@
-package gosite
+package geosite
 
 import (
 	"errors"
