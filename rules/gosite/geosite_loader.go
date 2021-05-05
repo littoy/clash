@@ -1,4 +1,4 @@
-package router
+package gosite
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	C "github.com/Dreamacro/clash/constant"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 /*func loadGeoIP(code string) ([]*CIDR, error) {
@@ -19,6 +19,11 @@ var (
 	FileCache = make(map[string][]byte)
 	//IPCache   = make(map[string]*GeoIP)
 	SiteCache = make(map[string]*GeoSite)
+)
+
+const (
+	errCodeTruncated = -1
+	errCodeOverflow  = -3
 )
 
 func ReadFile(path string) ([]byte, error) {
@@ -108,7 +113,7 @@ func find(data, code []byte) []byte {
 		if dataL < 2 {
 			return nil
 		}
-		x, y := proto.DecodeVarint(data[1:])
+		x, y := decodeVarint(data[1:])
 		if x == 0 && y == 0 {
 			return nil
 		}
@@ -197,4 +202,114 @@ func loadGeositeWithAttr(file string, siteWithAttr string) ([]*Domain, error) {
 	}
 
 	return filteredDomains, nil
+}
+
+func consumeVarint(b []byte) (v uint64, n int) {
+	var y uint64
+	if len(b) <= 0 {
+		return 0, errCodeTruncated
+	}
+	v = uint64(b[0])
+	if v < 0x80 {
+		return v, 1
+	}
+	v -= 0x80
+
+	if len(b) <= 1 {
+		return 0, errCodeTruncated
+	}
+	y = uint64(b[1])
+	v += y << 7
+	if y < 0x80 {
+		return v, 2
+	}
+	v -= 0x80 << 7
+
+	if len(b) <= 2 {
+		return 0, errCodeTruncated
+	}
+	y = uint64(b[2])
+	v += y << 14
+	if y < 0x80 {
+		return v, 3
+	}
+	v -= 0x80 << 14
+
+	if len(b) <= 3 {
+		return 0, errCodeTruncated
+	}
+	y = uint64(b[3])
+	v += y << 21
+	if y < 0x80 {
+		return v, 4
+	}
+	v -= 0x80 << 21
+
+	if len(b) <= 4 {
+		return 0, errCodeTruncated
+	}
+	y = uint64(b[4])
+	v += y << 28
+	if y < 0x80 {
+		return v, 5
+	}
+	v -= 0x80 << 28
+
+	if len(b) <= 5 {
+		return 0, errCodeTruncated
+	}
+	y = uint64(b[5])
+	v += y << 35
+	if y < 0x80 {
+		return v, 6
+	}
+	v -= 0x80 << 35
+
+	if len(b) <= 6 {
+		return 0, errCodeTruncated
+	}
+	y = uint64(b[6])
+	v += y << 42
+	if y < 0x80 {
+		return v, 7
+	}
+	v -= 0x80 << 42
+
+	if len(b) <= 7 {
+		return 0, errCodeTruncated
+	}
+	y = uint64(b[7])
+	v += y << 49
+	if y < 0x80 {
+		return v, 8
+	}
+	v -= 0x80 << 49
+
+	if len(b) <= 8 {
+		return 0, errCodeTruncated
+	}
+	y = uint64(b[8])
+	v += y << 56
+	if y < 0x80 {
+		return v, 9
+	}
+	v -= 0x80 << 56
+
+	if len(b) <= 9 {
+		return 0, errCodeTruncated
+	}
+	y = uint64(b[9])
+	v += y << 63
+	if y < 2 {
+		return v, 10
+	}
+	return 0, errCodeOverflow
+}
+
+func decodeVarint(b []byte) (uint64, int) {
+	v, n := consumeVarint(b)
+	if n < 0 {
+		return 0, 0
+	}
+	return v, n
 }

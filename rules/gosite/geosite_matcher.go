@@ -1,11 +1,10 @@
-
-package router
+package gosite
 
 import (
 	"errors"
 	"fmt"
 	"runtime"
-	
+
 	"github.com/Dreamacro/clash/common/strmatcher"
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/log"
@@ -42,11 +41,11 @@ type DomainMatcher struct {
 
 // Initial or update GeoSite rules
 func UpdateGeoSiteRule(newRules []C.Rule) {
-	
+
 	defer runtime.GC()
 	for _, rule := range newRules {
 		if rule.RuleType() == C.GEOSITE {
-			
+
 			country := rule.Payload()
 			domains, err := loadGeositeWithAttr("geosite.dat", country)
 			if err != nil {
@@ -63,7 +62,7 @@ func UpdateGeoSiteRule(newRules []C.Rule) {
 				}
 				g.Add(m)
 			}
-			
+
 			log.Infoln("Start initial geosite matcher %s", country)
 
 			DomainMatcherCache[country] = &DomainMatcher{
@@ -74,13 +73,13 @@ func UpdateGeoSiteRule(newRules []C.Rule) {
 }
 
 func NewDomainMatcher(country string) (*DomainMatcher, error) {
-	
+
 	if DomainMatcherCache[country] == nil {
-		
+
 		return nil, fmt.Errorf("[GeoSite] Miss domain matcher cache for country: %s", country)
 	}
-	
-	return DomainMatcherCache[country], nil;
+
+	return DomainMatcherCache[country], nil
 }
 
 func (m *DomainMatcher) ApplyDomain(domain string) bool {

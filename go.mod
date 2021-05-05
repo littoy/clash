@@ -19,7 +19,6 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210403161142-5e06dd20ab57
 	gopkg.in/yaml.v2 v2.4.0
-	github.com/golang/protobuf v1.5.2
 	google.golang.org/protobuf v1.26.0
 	gvisor.dev/gvisor v0.0.0-00010101000000-000000000000
 )

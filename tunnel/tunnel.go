@@ -15,7 +15,7 @@ import (
 	"github.com/Dreamacro/clash/context"
 	"github.com/Dreamacro/clash/log"
 	R "github.com/Dreamacro/clash/rules"
-	"github.com/Dreamacro/clash/rules/router"
+	"github.com/Dreamacro/clash/rules/gosite"
 	"github.com/Dreamacro/clash/tunnel/statistic"
 )
 
@@ -66,7 +66,7 @@ func Rules() []C.Rule {
 func UpdateRules(newRules []C.Rule) {
 	configMux.Lock()
 	rules = newRules
-	router.UpdateGeoSiteRule(newRules)
+	gosite.UpdateGeoSiteRule(newRules)
 	configMux.Unlock()
 }
 
@@ -324,8 +324,10 @@ func match(metadata *C.Metadata) (C.Proxy, C.Rule, error) {
 		resolved = true
 	}
 
-	// Preset process name
-	preProcess.Match(metadata)
+	// TODO preset process name
+	if metadata.Type != C.TPROXY {
+		preProcess.Match(metadata)
+	}
 
 	for _, rule := range rules {
 		if !resolved && shouldResolveIP(rule, metadata) {

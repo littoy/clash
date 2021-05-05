@@ -4,14 +4,14 @@ import (
 	//"errors"
 	//"time"
 
-	"github.com/Dreamacro/clash/rules/router"
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/log"
+	"github.com/Dreamacro/clash/rules/gosite"
 )
 
 type GEOSITE struct {
-	country     string
-	adapter     string
+	country string
+	adapter string
 }
 
 func (g *GEOSITE) RuleType() C.RuleType {
@@ -22,25 +22,25 @@ func (g *GEOSITE) Match(metadata *C.Metadata) bool {
 	if metadata.AddrType != C.AtypDomainName {
 		return false
 	}
-	
+
 	//start := time.Now()
-	
+
 	domain := metadata.Host
-	
-	matcher, err := router.NewDomainMatcher(g.country)
+
+	matcher, err := gosite.NewDomainMatcher(g.country)
 
 	if err != nil {
 		log.Errorln("Failed to get geosite matcher for country: %s, base error: %s", g.country, err.Error())
 		return false
 	}
-	
+
 	r := matcher.ApplyDomain(domain)
 	/**
 	if r {
 		elapsed := time.Since(start)
 		log.Infoln("Match geosite domain \"%s\" spend time: %s", domain, elapsed)
 	} **/
-	
+
 	return r
 }
 
@@ -58,8 +58,8 @@ func (g *GEOSITE) ShouldResolveIP() bool {
 
 func NewGEOSITE(country string, adapter string) *GEOSITE {
 	geosite := &GEOSITE{
-		country:     country,
-		adapter:     adapter,
+		country: country,
+		adapter: adapter,
 	}
 
 	return geosite

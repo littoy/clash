@@ -422,6 +422,9 @@ func parseRules(cfg *RawConfig, proxies map[string]C.Proxy) ([]C.Rule, error) {
 		rule = trimArr(rule)
 		params = trimArr(params)
 
+		if cfg.TProxyPort != 0 && rule[0] == "PROCESS-NAME" {
+			continue
+		}
 		parsed, parseErr := R.ParseRule(rule[0], payload, target, params)
 		if parseErr != nil {
 			return nil, fmt.Errorf("rules[%d] [%s] error: %s", idx, line, parseErr.Error())
