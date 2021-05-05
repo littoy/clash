@@ -2,7 +2,6 @@ package rules
 
 import (
 	"fmt"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -24,9 +23,6 @@ func (ps *Process) RuleType() C.RuleType {
 }
 
 func (ps *Process) Match(metadata *C.Metadata) bool {
-	if runtime.GOARCH == "arm64" {
-		return false
-	}
 
 	if metadata.Process != "" {
 		//log.Debugln("Use cache process: %s", metadata.Process)

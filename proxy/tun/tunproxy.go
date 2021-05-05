@@ -112,7 +112,7 @@ func NewTunProxy(deviceURL string) (TunAdapter, error) {
 	// UDP handler
 	ipstack.SetTransportProtocolHandler(udp.ProtocolNumber, tl.udpHandlePacket)
 
-	log.Infoln("Tun adapter have interface name: %s", tundev.Name())
+	log.Infoln("Tun adapter listening at: %s(198.18.0.1)", tundev.Name())
 	return tl, nil
 
 }

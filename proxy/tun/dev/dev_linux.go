@@ -144,7 +144,7 @@ func (t *tunLinux) WriteNotify() {
 
 		_, err := t.Write(vv.ToView())
 		if err != nil {
-			log.Errorln("can not read from tun: %v", err)
+			log.Errorln("can not write to tun: %v", err)
 		}
 	}
 }

@@ -172,7 +172,7 @@ func updateGeneral(general *config.General, force bool) {
 	tunnel.SetMode(general.Mode)
 	resolver.DisableIPv6 = !general.IPv6
 
-	if general.Tun.Enable {
+	if general.Tun.Enable && general.Interface == "" {
 		autoDetectInterfaceName, err := dev.GetAutoDetectInterface()
 		if err == nil {
 			if autoDetectInterfaceName != "" && autoDetectInterfaceName != "<nil>" {
@@ -182,7 +182,7 @@ func updateGeneral(general *config.General, force bool) {
 				log.Debugln("Auto detect interface is empty.")
 			}
 		} else {
-			log.Debugln("Can not find auto detect interface. %v", err)
+			log.Debugln("Can not find auto detect interface. %s", err.Error())
 		}
 	}
 

@@ -185,10 +185,8 @@ func (t *tunWindows) AsLinkEndpoint() (result stack.LinkEndpoint, err error) {
 		for !t.closed {
 			packet := make([]byte, mtu)
 			n, err := t.Read(packet, messageTransportHeaderSize)
-			if err != nil && err.Error() != "file already closed" {
-				if !t.closed {
-					log.Errorln("can not read from tun: %v", err)
-				}
+			if err != nil && !t.closed {
+				log.Errorln("can not read from tun: %v", err)
 			}
 			var p tcpip.NetworkProtocolNumber
 			switch header.IPVersion(packet) {
@@ -348,8 +346,8 @@ func (t *tunWindows) WriteNotify() {
 		vv.Append(packet.Pkt.Data().ExtractVV())
 
 		_, err := t.Write(vv.ToView(), messageTransportHeaderSize)
-		if err != nil {
-			log.Errorln("can not read from tun: %v", err)
+		if err != nil && !t.closed {
+			log.Errorln("can not write to tun: %v", err)
 		}
 	}
 }
