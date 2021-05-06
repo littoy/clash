@@ -74,12 +74,12 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 			wsOpts.Headers = header
 		}
 
-		//if v.option.TLS {
-		wsOpts.TLS = true
-		wsOpts.SessionCache = getClientSessionCache()
-		wsOpts.SkipCertVerify = v.option.SkipCertVerify
-		wsOpts.ServerName = v.option.ServerName
-		//}
+		if v.option.TLS {
+			wsOpts.TLS = true
+			wsOpts.SessionCache = getClientSessionCache()
+			wsOpts.SkipCertVerify = v.option.SkipCertVerify
+			wsOpts.ServerName = v.option.ServerName
+		}
 		c, err = vmess.StreamWebsocketConn(c, wsOpts, nil)
 	default:
 		alpn := defaultALPN
