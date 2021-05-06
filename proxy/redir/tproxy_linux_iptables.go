@@ -118,6 +118,10 @@ func CleanUpTProxyLinuxIPTables() {
 
 	log.Warnln("Clean up tproxy linux iptables")
 
+	if _, err := execCmd("iptables -t mangle -L clash_divert"); err != nil {
+		return
+	}
+
 	// clean route
 	execCmd(fmt.Sprintf("ip -f inet rule del fwmark %s lookup %s", PROXY_FWMARK, PROXY_ROUTE_TABLE))
 	execCmd(fmt.Sprintf("ip -f inet route del local default dev %s table %s", interfaceName, PROXY_ROUTE_TABLE))

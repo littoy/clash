@@ -299,7 +299,7 @@ func updateIPTables(dns *config.DNS, general *config.General) {
 
 	if err != nil {
 		log.Errorln("Can not setting iptables for TProxy on linux, %s", err.Error())
-		os.Exit(1)
+		os.Exit(2)
 	}
 }
 
