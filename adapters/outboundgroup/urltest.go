@@ -68,13 +68,12 @@ func (u *URLTest) fast(touch bool) C.Proxy {
 	elm, _, _ := u.fastSingle.Do(func() (interface{}, error) {
 		proxies := u.proxies(touch)
 		fast := proxies[0]
-		oldFast := u.fastNode
-		u.fastNode = nil
 		min := fast.LastDelay()
+		fastNotExist := true
 
 		for _, proxy := range proxies[1:] {
-			if oldFast != nil && u.fastNode == nil && proxy.Name() == oldFast.Name() {
-				u.fastNode = oldFast
+			if u.fastNode != nil && proxy.Name() == u.fastNode.Name() {
+				fastNotExist = false
 			}
 
 			if !proxy.Alive() {
@@ -89,7 +88,7 @@ func (u *URLTest) fast(touch bool) C.Proxy {
 		}
 
 		// tolerance
-		if u.fastNode == nil || !u.fastNode.Alive() || u.fastNode.LastDelay() > fast.LastDelay()+u.tolerance {
+		if u.fastNode == nil || fastNotExist || !u.fastNode.Alive() || u.fastNode.LastDelay() > fast.LastDelay()+u.tolerance {
 			u.fastNode = fast
 		}
 
