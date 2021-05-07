@@ -341,7 +341,7 @@ func match(metadata *C.Metadata) (C.Proxy, C.Rule, error) {
 
 		if rule.Match(metadata) {
 			adapter, ok := proxies[rule.Adapter()]
-			if !ok {
+			if adapter.Type().String() == "Pass" || !ok {
 				continue
 			}
 
