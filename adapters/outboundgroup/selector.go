@@ -83,7 +83,7 @@ func (s *Selector) Unwrap(metadata *C.Metadata) C.Proxy {
 }
 
 func (s *Selector) selectedProxy(touch bool) C.Proxy {
-	var groupTypes = map[string]string{"Relay": "1", "Selector": "1", "Fallback": "1", "URLTest": "1", "LoadBalance": "1"}
+	var groupTypes = map[string]string{"Direct": "1", "Reject": "1", "Pass": "1", "Relay": "1", "Selector": "1", "Fallback": "1", "URLTest": "1", "LoadBalance": "1"}
 	elm, _, _ := s.single.Do(func() (interface{}, error) {
 		proxies := getProvidersProxies(s.providers, touch)
 		for _, proxy := range proxies {
