@@ -34,7 +34,7 @@ var (
 	// default timeout for UDP session
 	udpTimeout = 60 * time.Second
 
-	preProcess, _ = R.NewProcess("", "")
+	preProcessCacheFinder, _ = R.NewProcess("", "")
 
 	fakeIpMask  = net.IPv4Mask(0, 0, 0xff, 0xff)
 	fakeIpMaxIp = net.IPv4(0, 0, 255, 255)
@@ -324,10 +324,8 @@ func match(metadata *C.Metadata) (C.Proxy, C.Rule, error) {
 		resolved = true
 	}
 
-	// TODO preset process name
-	if metadata.Type != C.TPROXY {
-		preProcess.Match(metadata)
-	}
+	// preset process name and cache it
+	preProcessCacheFinder.Match(metadata)
 
 	for _, rule := range rules {
 		if !resolved && shouldResolveIP(rule, metadata) {
@@ -339,11 +337,6 @@ func match(metadata *C.Metadata) (C.Proxy, C.Rule, error) {
 				metadata.DstIP = ip
 			}
 			resolved = true
-		}
-
-		// ignore match rule type "process" in proxy type "tproxy"
-		if rule.RuleType() == C.Process && metadata.Type == C.TPROXY {
-			continue
 		}
 
 		if rule.Match(metadata) {

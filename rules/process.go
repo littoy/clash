@@ -29,6 +29,11 @@ func (ps *Process) Match(metadata *C.Metadata) bool {
 		return strings.EqualFold(metadata.Process, ps.process)
 	}
 
+	// ignore match in proxy type "tproxy"
+	if metadata.Type == C.TPROXY {
+		return false
+	}
+
 	key := fmt.Sprintf("%s:%s:%s", metadata.NetWork.String(), metadata.SrcIP.String(), metadata.SrcPort)
 	cached, hit := processCache.Get(key)
 	if !hit {
