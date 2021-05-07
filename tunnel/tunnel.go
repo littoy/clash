@@ -331,7 +331,7 @@ func match(metadata *C.Metadata) (C.Proxy, C.Rule, error) {
 		if !resolved && shouldResolveIP(rule, metadata) {
 			ip, err := resolver.ResolveIP(metadata.Host)
 			if err != nil {
-				log.Debugln("[DNS] resolve %s error: %s", metadata.Host, err.Error())
+				log.Warnln("[DNS] resolve %s error: %s", metadata.Host, err.Error())
 			} else {
 				log.Debugln("[DNS] %s --> %s", metadata.Host, ip.String())
 				metadata.DstIP = ip
@@ -341,12 +341,12 @@ func match(metadata *C.Metadata) (C.Proxy, C.Rule, error) {
 
 		if rule.Match(metadata) {
 			adapter, ok := proxies[rule.Adapter()]
-			if adapter.Type().String() == "Pass" || !ok {
+			if !ok || adapter.Type() == C.Pass || adapter.Unwrap(metadata).Type() == C.Pass {
 				continue
 			}
 
 			if metadata.NetWork == C.UDP && !adapter.SupportUDP() {
-				log.Debugln("%s UDP is not supported", adapter.Name())
+				log.Warnln("%s UDP is not supported", adapter.Name())
 				continue
 			}
 			return adapter, rule, nil
