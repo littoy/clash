@@ -18,8 +18,8 @@ require (
 	golang.org/x/net v0.0.0-20210508051633-16afe75a6701
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210507161434-a76c4d0a0096
-	google.golang.org/protobuf v1.26.0
 	gopkg.in/yaml.v2 v2.4.0
+	google.golang.org/protobuf v1.26.0
 	gvisor.dev/gvisor v0.0.0-00010101000000-000000000000
 )
 
