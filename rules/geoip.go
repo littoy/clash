@@ -9,6 +9,7 @@ type GEOIP struct {
 	country     string
 	adapter     string
 	noResolveIP bool
+	network     C.NetWork
 }
 
 func (g *GEOIP) RuleType() C.RuleType {
@@ -36,11 +37,16 @@ func (g *GEOIP) ShouldResolveIP() bool {
 	return !g.noResolveIP
 }
 
-func NewGEOIP(country string, adapter string, noResolveIP bool) *GEOIP {
+func (g *GEOIP) NetWork() C.NetWork {
+	return g.network
+}
+
+func NewGEOIP(country string, adapter string, noResolveIP bool, network C.NetWork) *GEOIP {
 	geoip := &GEOIP{
 		country:     country,
 		adapter:     adapter,
 		noResolveIP: noResolveIP,
+		network:     network,
 	}
 
 	return geoip

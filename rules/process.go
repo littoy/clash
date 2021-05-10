@@ -16,6 +16,7 @@ var processCache = cache.NewLRUCache(cache.WithAge(2), cache.WithSize(64))
 type Process struct {
 	adapter string
 	process string
+	network C.NetWork
 }
 
 func (ps *Process) RuleType() C.RuleType {
@@ -70,9 +71,14 @@ func (ps *Process) ShouldResolveIP() bool {
 	return false
 }
 
-func NewProcess(process string, adapter string) (*Process, error) {
+func (ps *Process) NetWork() C.NetWork {
+	return ps.network
+}
+
+func NewProcess(process string, adapter string, network C.NetWork) (*Process, error) {
 	return &Process{
 		adapter: adapter,
 		process: process,
+		network: network,
 	}, nil
 }

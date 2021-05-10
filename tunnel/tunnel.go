@@ -34,7 +34,7 @@ var (
 	// default timeout for UDP session
 	udpTimeout = 60 * time.Second
 
-	preProcessCacheFinder, _ = R.NewProcess("", "")
+	preProcessCacheFinder, _ = R.NewProcess("", "", C.ALLNet)
 
 	fakeIpMask  = net.IPv4Mask(0, 0, 0xff, 0xff)
 	fakeIpMaxIp = net.IPv4(0, 0, 255, 255)
@@ -241,13 +241,13 @@ func handleUDPConn(packet *inbound.PacketAdapter) {
 
 		switch true {
 		case rule != nil:
-			log.Infoln("[UDP] %s(%s) --> %v match %s(%s) using %s", metadata.SourceAddress(), metadata.Process, metadata.String(), rule.RuleType().String(), rule.Payload(), rawPc.Chains().String())
+			log.Infoln("[UDP] %s(%s) --> %s:%s match %s(%s) %s using %s", metadata.SourceAddress(), metadata.Process, metadata.String(), metadata.DstPort, rule.RuleType().String(), rule.Payload(), rule.NetWork().String(), rawPc.Chains().String())
 		case mode == Global:
-			log.Infoln("[UDP] %s(%s) --> %v using GLOBAL", metadata.SourceAddress(), metadata.Process, metadata.String())
+			log.Infoln("[UDP] %s(%s) --> %s using GLOBAL", metadata.SourceAddress(), metadata.Process, metadata.String())
 		case mode == Direct:
-			log.Infoln("[UDP] %s(%s) --> %v using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
+			log.Infoln("[UDP] %s(%s) --> %s using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
 		default:
-			log.Infoln("[UDP] %s(%s) --> %v doesn't match any rule using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
+			log.Infoln("[UDP] %s(%s) --> %s doesn't match any rule using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
 		}
 
 		go handleUDPToLocal(packet.UDPPacket, pc, key, fAddr)
@@ -291,13 +291,13 @@ func handleTCPConn(ctx C.ConnContext) {
 
 	switch true {
 	case rule != nil:
-		log.Infoln("[TCP] %s(%s) --> %v match %s(%s) using %s", metadata.SourceAddress(), metadata.Process, metadata.String(), rule.RuleType().String(), rule.Payload(), remoteConn.Chains().String())
+		log.Infoln("[TCP] %s(%s) --> %s:%s match %s(%s) %s using %s", metadata.SourceAddress(), metadata.Process, metadata.String(), metadata.DstPort, rule.RuleType().String(), rule.Payload(), rule.NetWork().String(), remoteConn.Chains().String())
 	case mode == Global:
-		log.Infoln("[TCP] %s(%s) --> %v using GLOBAL", metadata.SourceAddress(), metadata.Process, metadata.String())
+		log.Infoln("[TCP] %s(%s) --> %s using GLOBAL", metadata.SourceAddress(), metadata.Process, metadata.String())
 	case mode == Direct:
-		log.Infoln("[TCP] %s(%s) --> %v using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
+		log.Infoln("[TCP] %s(%s) --> %s using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
 	default:
-		log.Infoln("[TCP] %s(%s) --> %v doesn't match any rule using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
+		log.Infoln("[TCP] %s(%s) --> %s doesn't match any rule using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
 	}
 
 	switch c := ctx.(type) {
@@ -347,6 +347,10 @@ func match(metadata *C.Metadata) (C.Proxy, C.Rule, error) {
 
 			if metadata.NetWork == C.UDP && !adapter.SupportUDP() {
 				log.Debugln("%s UDP is not supported", adapter.Name())
+				continue
+			}
+
+			if rule.NetWork() != C.ALLNet && rule.NetWork() != metadata.NetWork {
 				continue
 			}
 			return adapter, rule, nil
