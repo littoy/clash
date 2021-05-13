@@ -14,9 +14,9 @@ import (
 
 	"github.com/Dreamacro/clash/component/dialer"
 	"github.com/Dreamacro/clash/component/resolver"
-	"github.com/Dreamacro/clash/component/vless"
-	"github.com/Dreamacro/clash/component/vmess"
 	C "github.com/Dreamacro/clash/constant"
+	"github.com/Dreamacro/clash/transport/vless"
+	"github.com/Dreamacro/clash/transport/vmess"
 )
 
 const (
@@ -70,10 +70,10 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 		}
 
 		//if v.option.TLS {
-			wsOpts.TLS = true
-			wsOpts.SessionCache = getClientSessionCache()
-			//wsOpts.SkipCertVerify = v.option.SkipCertVerify
-			wsOpts.ServerName = v.option.ServerName
+		wsOpts.TLS = true
+		wsOpts.SessionCache = getClientSessionCache()
+		//wsOpts.SkipCertVerify = v.option.SkipCertVerify
+		wsOpts.ServerName = v.option.ServerName
 		//}
 		c, err = vmess.StreamWebsocketConn(c, wsOpts)
 	default:
