@@ -71,12 +71,16 @@ func nanotime() int64
 
 // OpenTunDevice return a TunDevice according a URL
 func OpenTunDevice(deviceURL url.URL) (TunDevice, error) {
-	if deviceURL.Scheme != "dev" {
-		return nil, errors.New("unsupported device type " + deviceURL.Scheme)
 
+	requestedGUID, err := windows.GUIDFromString("{330EAEF8-7578-5DF2-D97B-8DADC0EA85CB}")
+	if err == nil {
+		WintunStaticRequestedGUID = &requestedGUID
+		log.Debugln("Generate GUID: %s", WintunStaticRequestedGUID.String())
+	} else {
+		log.Warnln("Error parese GUID from string: %v", err)
 	}
-	interfaceName := deviceURL.Host
-	// TODO: configure the MTU
+
+	interfaceName := "Clash"
 	mtu := 9000
 
 	tun, err := CreateTUN(interfaceName, mtu)
@@ -102,19 +106,6 @@ func CreateTUN(ifname string, mtu int) (TunDevice, error) {
 func CreateTUNWithRequestedGUID(ifname string, requestedGUID *windows.GUID, mtu int) (TunDevice, error) {
 	var err error
 	var wt *wintun.Adapter
-
-	ifname = "Clash"
-
-	if requestedGUID == nil {
-		guid, err := windows.GUIDFromString("{330EAEF8-7578-5DF2-D97B-8DADC0EA85CB}")
-		if err == nil {
-			requestedGUID = &guid
-		} else {
-			log.Infoln("Error parese GUID from string: %v", err)
-		}
-	}
-
-	log.Debugln("Generate GUID: %s", requestedGUID.String())
 
 	// Does an interface with this name already exist?
 	wt, err = WintunPool.OpenAdapter(ifname)
@@ -166,58 +157,6 @@ func CreateTUNWithRequestedGUID(ifname string, requestedGUID *windows.GUID, mtu 
 	return tun, nil
 }
 
-func (t *tunWindows) AsLinkEndpoint() (result stack.LinkEndpoint, err error) {
-	if t.linkCache != nil {
-		return t.linkCache, nil
-	}
-
-	mtu, err := t.MTU()
-
-	if err != nil {
-		return nil, errors.New("unable to get device mtu")
-	}
-
-	linkEP := channel.New(512, uint32(mtu), "")
-
-	// start Read loop. read ip packet from tun and write it to ipstack
-	t.wg.Add(1)
-	go func() {
-		for !t.closed {
-			packet := make([]byte, mtu)
-			n, err := t.Read(packet, messageTransportHeaderSize)
-			if err != nil && !t.closed {
-				log.Errorln("can not read from tun: %v", err)
-			}
-			var p tcpip.NetworkProtocolNumber
-			switch header.IPVersion(packet) {
-			case header.IPv4Version:
-				p = header.IPv4ProtocolNumber
-			case header.IPv6Version:
-				p = header.IPv6ProtocolNumber
-			}
-			if linkEP.IsAttached() {
-				linkEP.InjectInbound(p, stack.NewPacketBuffer(stack.PacketBufferOptions{
-					Data: buffer.View(packet[:n]).ToVectorisedView(),
-				}))
-			} else {
-				log.Debugln("received packet from tun when %s is not attached to any dispatcher.", t.Name())
-			}
-		}
-		t.wg.Done()
-		t.wt.Delete(false)
-		log.Debugln("%v stop read loop", t.Name())
-	}()
-
-	// start write notification
-	t.writeHandle = linkEP.AddNotify(t)
-	t.linkCache = linkEP
-	return t.linkCache, nil
-}
-
-func (tun *tunWindows) Name() string {
-	return tun.name
-}
-
 func (tun *tunWindows) getName() (string, error) {
 	tun.closing.RLock()
 	defer tun.closing.RUnlock()
@@ -225,10 +164,6 @@ func (tun *tunWindows) getName() (string, error) {
 		return "", os.ErrClosed
 	}
 	return tun.wt.Name()
-}
-
-func (t *tunWindows) URL() string {
-	return fmt.Sprintf("dev://%s", t.Name())
 }
 
 func (tun *tunWindows) Close() {
@@ -250,11 +185,6 @@ func (tun *tunWindows) Close() {
 			}
 		}
 	})
-}
-
-// Wait wait goroutines to exit
-func (t *tunWindows) Wait() {
-	t.wg.Wait()
 }
 
 func (tun *tunWindows) MTU() (int, error) {
@@ -334,24 +264,6 @@ func (tun *tunWindows) Write(buff []byte, offset int) (int, error) {
 	return 0, fmt.Errorf("Write failed: %w", err)
 }
 
-// WriteNotify implements channel.Notification.WriteNotify.
-func (t *tunWindows) WriteNotify() {
-	packet, ok := t.linkCache.Read()
-	if ok {
-		var vv buffer.VectorisedView
-		// Append upper headers.
-		vv.AppendView(packet.Pkt.NetworkHeader().View())
-		vv.AppendView(packet.Pkt.TransportHeader().View())
-		// Append data payload.
-		vv.Append(packet.Pkt.Data().ExtractVV())
-
-		_, err := t.Write(vv.ToView(), messageTransportHeaderSize)
-		if err != nil && !t.closed {
-			log.Errorln("can not write to tun: %v", err)
-		}
-	}
-}
-
 // LUID returns Windows interface instance ID.
 func (tun *tunWindows) LUID() uint64 {
 	tun.closing.RLock()
@@ -379,6 +291,85 @@ func (rate *rateJuggler) update(packetLen uint64) {
 		atomic.StoreUint64(&rate.current, total*uint64(time.Second/time.Nanosecond)/period)
 		atomic.StoreUint64(&rate.nextByteCount, 0)
 		atomic.StoreInt32(&rate.changing, 0)
+	}
+}
+
+func (tun *tunWindows) Name() string {
+	return tun.name
+}
+
+func (t *tunWindows) URL() string {
+	return fmt.Sprintf("dev://%s", t.Name())
+}
+
+// Wait wait goroutines to exit
+func (t *tunWindows) Wait() {
+	t.wg.Wait()
+}
+
+func (t *tunWindows) AsLinkEndpoint() (result stack.LinkEndpoint, err error) {
+	if t.linkCache != nil {
+		return t.linkCache, nil
+	}
+
+	mtu, err := t.MTU()
+
+	if err != nil {
+		return nil, errors.New("unable to get device mtu")
+	}
+
+	linkEP := channel.New(512, uint32(mtu), "")
+
+	// start Read loop. read ip packet from tun and write it to ipstack
+	t.wg.Add(1)
+	go func() {
+		for !t.closed {
+			packet := make([]byte, mtu)
+			n, err := t.Read(packet, messageTransportHeaderSize)
+			if err != nil && !t.closed {
+				log.Errorln("can not read from tun: %v", err)
+			}
+			var p tcpip.NetworkProtocolNumber
+			switch header.IPVersion(packet) {
+			case header.IPv4Version:
+				p = header.IPv4ProtocolNumber
+			case header.IPv6Version:
+				p = header.IPv6ProtocolNumber
+			}
+			if linkEP.IsAttached() {
+				linkEP.InjectInbound(p, stack.NewPacketBuffer(stack.PacketBufferOptions{
+					Data: buffer.View(packet[:n]).ToVectorisedView(),
+				}))
+			} else {
+				log.Debugln("received packet from tun when %s is not attached to any dispatcher.", t.Name())
+			}
+		}
+		t.wg.Done()
+		t.wt.Delete(false)
+		log.Debugln("%v stop read loop", t.Name())
+	}()
+
+	// start write notification
+	t.writeHandle = linkEP.AddNotify(t)
+	t.linkCache = linkEP
+	return t.linkCache, nil
+}
+
+// WriteNotify implements channel.Notification.WriteNotify.
+func (t *tunWindows) WriteNotify() {
+	packet, ok := t.linkCache.Read()
+	if ok {
+		var vv buffer.VectorisedView
+		// Append upper headers.
+		vv.AppendView(packet.Pkt.NetworkHeader().View())
+		vv.AppendView(packet.Pkt.TransportHeader().View())
+		// Append data payload.
+		vv.Append(packet.Pkt.Data().ExtractVV())
+
+		_, err := t.Write(vv.ToView(), messageTransportHeaderSize)
+		if err != nil && !t.closed {
+			log.Errorln("can not write to tun: %v", err)
+		}
 	}
 }
 
