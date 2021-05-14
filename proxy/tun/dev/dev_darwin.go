@@ -38,7 +38,7 @@ const _IOC_INOUT = _IOC_IN | _IOC_OUT
 const _CTLIOCGINFO = _IOC_INOUT | ((100 & 0x1fff) << 16) | uint32(byte('N'))<<8 | 3
 
 // #define	SIOCAIFADDR_IN6		_IOW('i', 26, struct in6_aliasreq) = 0x8080691a
-const _SIOCAIFADDR_IN6 = _IOC_IN | ((128 & 0x1fff) << 16) | uint32(byte('i'))<<8 | 26
+//const _SIOCAIFADDR_IN6 = _IOC_IN | ((128 & 0x1fff) << 16) | uint32(byte('i'))<<8 | 26
 
 // #define	SIOCPROTOATTACH_IN6	_IOWR('i', 110, struct in6_aliasreq_64)
 const _SIOCPROTOATTACH_IN6 = _IOC_INOUT | ((128 & 0x1fff) << 16) | uint32(byte('i'))<<8 | 110
@@ -60,7 +60,7 @@ const (
 )
 
 type tunDarwin struct {
-	url       string
+	//url       string
 	name      string
 	tunFile   *os.File
 	linkCache *channel.Endpoint
@@ -85,11 +85,11 @@ type sockaddrCtl struct {
 
 // https://github.com/apple/darwin-xnu/blob/a449c6a3b8014d9406c2ddbdc81795da24aa7443/bsd/net/if.h#L402-L563
 
-type ifreqAddr struct {
-	Name [unix.IFNAMSIZ]byte
-	Addr unix.RawSockaddrInet4
-	Pad  [8]byte
-}
+//type ifreqAddr struct {
+//	Name [unix.IFNAMSIZ]byte
+//	Addr unix.RawSockaddrInet4
+//	Pad  [8]byte
+//}
 
 var sockaddrCtlSize uintptr = 32
 
@@ -218,7 +218,7 @@ func (t *tunDarwin) URL() string {
 
 func (t *tunDarwin) AsLinkEndpoint() (result stack.LinkEndpoint, err error) {
 	if t.closed {
-		return nil, fmt.Errorf("device closed.")
+		return nil, fmt.Errorf("device[%s] closed", t.name)
 	}
 	if t.linkCache != nil {
 		return t.linkCache, nil
@@ -316,7 +316,7 @@ func (t *tunDarwin) WriteNotify() {
 
 		_, err := t.Write(vv.ToView())
 		if err != nil {
-			log.Errorln("can not read from tun: %v", err)
+			log.Errorln("can not write to tun: %v", err)
 		}
 	}
 }
@@ -514,10 +514,10 @@ func (t *tunDarwin) attachLinkLocal() error {
 	// https://github.com/apple/darwin-xnu/blob/a449c6a3b8014d9406c2ddbdc81795da24aa7443/bsd/netinet6/in6_var.h#L114-L119
 	// https://opensource.apple.com/source/network_cmds/network_cmds-543.260.3/
 	type in6_addrlifetime struct {
-		ia6t_expire    uint64
-		ia6t_preferred uint64
-		ia6t_vltime    uint32
-		ia6t_pltime    uint32
+		//ia6t_expire    uint64
+		//ia6t_preferred uint64
+		//ia6t_vltime    uint32
+		//ia6t_pltime    uint32
 	}
 	// https://github.com/apple/darwin-xnu/blob/a449c6a3b8014d9406c2ddbdc81795da24aa7443/bsd/netinet6/in6_var.h#L336-L343
 	// https://github.com/apple/darwin-xnu/blob/a449c6a3b8014d9406c2ddbdc81795da24aa7443/bsd/netinet6/in6.h#L174-L181
@@ -562,6 +562,9 @@ func GetAutoDetectInterface() (string, error) {
 	err := cmd.Run()
 	if err != nil {
 		return "", err
+	}
+	if out.Len() == 0 {
+		return "", errors.New("interface not found by default route")
 	}
 	return out.String(), nil
 }

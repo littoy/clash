@@ -2,7 +2,6 @@ package rules
 
 import (
 	"fmt"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -17,6 +16,7 @@ var processCache = cache.NewLRUCache(cache.WithAge(2), cache.WithSize(64))
 type Process struct {
 	adapter string
 	process string
+	network C.NetWork
 }
 
 func (ps *Process) RuleType() C.RuleType {
@@ -24,13 +24,15 @@ func (ps *Process) RuleType() C.RuleType {
 }
 
 func (ps *Process) Match(metadata *C.Metadata) bool {
-	if runtime.GOARCH == "arm64" {
-		return false
-	}
 
 	if metadata.Process != "" {
 		//log.Debugln("Use cache process: %s", metadata.Process)
 		return strings.EqualFold(metadata.Process, ps.process)
+	}
+
+	// ignore match in proxy type "tproxy"
+	if metadata.Type == C.TPROXY {
+		return false
 	}
 
 	key := fmt.Sprintf("%s:%s:%s", metadata.NetWork.String(), metadata.SrcIP.String(), metadata.SrcPort)
@@ -69,9 +71,14 @@ func (ps *Process) ShouldResolveIP() bool {
 	return false
 }
 
-func NewProcess(process string, adapter string) (*Process, error) {
+func (ps *Process) NetWork() C.NetWork {
+	return ps.network
+}
+
+func NewProcess(process string, adapter string, network C.NetWork) (*Process, error) {
 	return &Process{
 		adapter: adapter,
 		process: process,
+		network: network,
 	}, nil
 }

@@ -1,20 +1,18 @@
 package tun
 
 import (
+	"encoding/binary"
 	"fmt"
 	"net"
 	"net/url"
 	"strings"
 
 	adapters "github.com/Dreamacro/clash/adapters/inbound"
-	"github.com/Dreamacro/clash/component/socks5"
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/log"
 	"github.com/Dreamacro/clash/proxy/tun/dev"
+	"github.com/Dreamacro/clash/transport/socks5"
 	"github.com/Dreamacro/clash/tunnel"
-
-	"encoding/binary"
-
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
@@ -112,7 +110,7 @@ func NewTunProxy(deviceURL string) (TunAdapter, error) {
 	// UDP handler
 	ipstack.SetTransportProtocolHandler(udp.ProtocolNumber, tl.udpHandlePacket)
 
-	log.Infoln("Tun adapter have interface name: %s", tundev.Name())
+	log.Infoln("Tun adapter listening at: %s(198.18.0.1)", tundev.Name())
 	return tl, nil
 
 }

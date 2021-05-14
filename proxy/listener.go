@@ -408,7 +408,7 @@ func ReCreateTun(conf config.Tun) error {
 
 func setMacOSAutoRoute() {
 	if runtime.GOOS == "darwin" {
-		log.Infoln("[MacOS auto route]Add system route.")
+		log.Infoln("Tun adapter auto setting MacOS route")
 		addSystemRoute("1")
 		addSystemRoute("2/7")
 		addSystemRoute("4/6")
@@ -423,7 +423,7 @@ func setMacOSAutoRoute() {
 
 func removeMacOSAutoRoute() {
 	if runtime.GOOS == "darwin" {
-		log.Infoln("[MacOS auto route]Remove system route.")
+		log.Infoln("Tun adapter removing MacOS route")
 		delSystemRoute("1")
 		delSystemRoute("2/7")
 		delSystemRoute("4/6")
@@ -439,7 +439,7 @@ func removeMacOSAutoRoute() {
 func addSystemRoute(net string) {
 	cmd := exec.Command("route", "add", "-net", net, "198.18.0.1")
 	if err := cmd.Run(); err != nil {
-		log.Errorln("[MacOS auto route]Failed to add system route: %s, cmd: %s", err.Error(), cmd.String())
+		log.Errorln("[MacOS auto route] Failed to add system route: %s, cmd: %s", err.Error(), cmd.String())
 	}
 }
 

@@ -3,7 +3,10 @@ package executor
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
+	"runtime"
+	"strconv"
 	"sync"
 
 	"github.com/Dreamacro/clash/adapters/outbound"
@@ -21,6 +24,7 @@ import (
 	"github.com/Dreamacro/clash/log"
 	P "github.com/Dreamacro/clash/proxy"
 	authStore "github.com/Dreamacro/clash/proxy/auth"
+	"github.com/Dreamacro/clash/proxy/redir"
 	"github.com/Dreamacro/clash/proxy/tun/dev"
 	"github.com/Dreamacro/clash/tunnel"
 )
@@ -79,6 +83,7 @@ func ApplyConfig(cfg *config.Config, force bool) {
 	updateHosts(cfg.Hosts)
 	updateExperimental(cfg)
 	updateProfile(cfg)
+	updateIPTables(cfg.DNS, cfg.General)
 	log.SetLevel(cfg.General.LogLevel)
 }
 
@@ -172,7 +177,7 @@ func updateGeneral(general *config.General, force bool) {
 	tunnel.SetMode(general.Mode)
 	resolver.DisableIPv6 = !general.IPv6
 
-	if general.Tun.Enable {
+	if (general.Tun.Enable || general.TProxyPort != 0) && general.Interface == "" {
 		autoDetectInterfaceName, err := dev.GetAutoDetectInterface()
 		if err == nil {
 			if autoDetectInterfaceName != "" && autoDetectInterfaceName != "<nil>" {
@@ -182,7 +187,7 @@ func updateGeneral(general *config.General, force bool) {
 				log.Debugln("Auto detect interface is empty.")
 			}
 		} else {
-			log.Debugln("Can not find auto detect interface. %v", err)
+			log.Debugln("Can not find auto detect interface. %s", err.Error())
 		}
 	}
 
@@ -278,6 +283,33 @@ func patchSelectGroup(proxies map[string]C.Proxy) {
 	}
 }
 
+func updateIPTables(dns *config.DNS, general *config.General) {
+	if runtime.GOOS != "linux" || dns.Listen == "" || general.TProxyPort == 0 || general.Tun.Enable {
+		return
+	}
+
+	_, dnsPortStr, err := net.SplitHostPort(dns.Listen)
+	if dnsPortStr == "0" || dnsPortStr == "" || err != nil {
+		return
+	}
+
+	dnsPort, err := strconv.Atoi(dnsPortStr)
+	if err != nil {
+		return
+	}
+
+	err = redir.SetTProxyLinuxIPTables(general.Interface, general.TProxyPort, dnsPort)
+
+	if err != nil {
+		log.Errorln("Can not setting iptables for TProxy on linux, %s", err.Error())
+		os.Exit(2)
+	}
+}
+
 func CleanUp() {
 	P.CleanUp()
+
+	if runtime.GOOS == "linux" {
+		redir.CleanUpTProxyLinuxIPTables()
+	}
 }

@@ -45,7 +45,18 @@ var (
 
 func setupLogger(dll *lazyDLL) {
 	syscall.Syscall(dll.NewProc("WintunSetLogger").Addr(), 1, windows.NewCallback(func(level loggerLevel, msg *uint16) int {
-		log.Infoln("[Wintun]", windows.UTF16PtrToString(msg))
+		var lv log.LogLevel
+		switch level {
+		case logInfo:
+			lv = log.INFO
+		case logWarn:
+			lv = log.WARNING
+		case logErr:
+			lv = log.ERROR
+		default:
+			lv = log.INFO
+		}
+		log.PrintLog(lv, "[Wintun] %s", windows.UTF16PtrToString(msg))
 		return 0
 	}), 0, 0)
 }

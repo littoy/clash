@@ -15,7 +15,7 @@ import (
 	"github.com/Dreamacro/clash/context"
 	"github.com/Dreamacro/clash/log"
 	R "github.com/Dreamacro/clash/rules"
-	"github.com/Dreamacro/clash/rules/router"
+	"github.com/Dreamacro/clash/rules/geosite"
 	"github.com/Dreamacro/clash/tunnel/statistic"
 )
 
@@ -34,7 +34,7 @@ var (
 	// default timeout for UDP session
 	udpTimeout = 60 * time.Second
 
-	preProcess, _ = R.NewProcess("", "")
+	preProcessCacheFinder, _ = R.NewProcess("", "", C.ALLNet)
 
 	fakeIpMask  = net.IPv4Mask(0, 0, 0xff, 0xff)
 	fakeIpMaxIp = net.IPv4(0, 0, 255, 255)
@@ -66,7 +66,7 @@ func Rules() []C.Rule {
 func UpdateRules(newRules []C.Rule) {
 	configMux.Lock()
 	rules = newRules
-	router.UpdateGeoSiteRule(newRules)
+	geosite.UpdateGeoSiteRule(newRules)
 	configMux.Unlock()
 }
 
@@ -241,13 +241,13 @@ func handleUDPConn(packet *inbound.PacketAdapter) {
 
 		switch true {
 		case rule != nil:
-			log.Infoln("[UDP] %s(%s) --> %v match %s(%s) using %s", metadata.SourceAddress(), metadata.Process, metadata.String(), rule.RuleType().String(), rule.Payload(), rawPc.Chains().String())
+			log.Infoln("[UDP] %s(%s) --> %s:%s match %s(%s) %s using %s", metadata.SourceAddress(), metadata.Process, metadata.String(), metadata.DstPort, rule.RuleType().String(), rule.Payload(), rule.NetWork().String(), rawPc.Chains().String())
 		case mode == Global:
-			log.Infoln("[UDP] %s(%s) --> %v using GLOBAL", metadata.SourceAddress(), metadata.Process, metadata.String())
+			log.Infoln("[UDP] %s(%s) --> %s using GLOBAL", metadata.SourceAddress(), metadata.Process, metadata.String())
 		case mode == Direct:
-			log.Infoln("[UDP] %s(%s) --> %v using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
+			log.Infoln("[UDP] %s(%s) --> %s using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
 		default:
-			log.Infoln("[UDP] %s(%s) --> %v doesn't match any rule using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
+			log.Infoln("[UDP] %s(%s) --> %s doesn't match any rule using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
 		}
 
 		go handleUDPToLocal(packet.UDPPacket, pc, key, fAddr)
@@ -291,13 +291,13 @@ func handleTCPConn(ctx C.ConnContext) {
 
 	switch true {
 	case rule != nil:
-		log.Infoln("[TCP] %s(%s) --> %v match %s(%s) using %s", metadata.SourceAddress(), metadata.Process, metadata.String(), rule.RuleType().String(), rule.Payload(), remoteConn.Chains().String())
+		log.Infoln("[TCP] %s(%s) --> %s:%s match %s(%s) %s using %s", metadata.SourceAddress(), metadata.Process, metadata.String(), metadata.DstPort, rule.RuleType().String(), rule.Payload(), rule.NetWork().String(), remoteConn.Chains().String())
 	case mode == Global:
-		log.Infoln("[TCP] %s(%s) --> %v using GLOBAL", metadata.SourceAddress(), metadata.Process, metadata.String())
+		log.Infoln("[TCP] %s(%s) --> %s using GLOBAL", metadata.SourceAddress(), metadata.Process, metadata.String())
 	case mode == Direct:
-		log.Infoln("[TCP] %s(%s) --> %v using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
+		log.Infoln("[TCP] %s(%s) --> %s using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
 	default:
-		log.Infoln("[TCP] %s(%s) --> %v doesn't match any rule using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
+		log.Infoln("[TCP] %s(%s) --> %s doesn't match any rule using DIRECT", metadata.SourceAddress(), metadata.Process, metadata.String())
 	}
 
 	switch c := ctx.(type) {
@@ -324,8 +324,8 @@ func match(metadata *C.Metadata) (C.Proxy, C.Rule, error) {
 		resolved = true
 	}
 
-	// Preset process name
-	preProcess.Match(metadata)
+	// preset process name and cache it
+	preProcessCacheFinder.Match(metadata)
 
 	for _, rule := range rules {
 		if !resolved && shouldResolveIP(rule, metadata) {
@@ -347,6 +347,10 @@ func match(metadata *C.Metadata) (C.Proxy, C.Rule, error) {
 
 			if metadata.NetWork == C.UDP && !adapter.SupportUDP() {
 				log.Warnln("%s UDP is not supported", adapter.Name())
+				continue
+			}
+
+			if rule.NetWork() != C.ALLNet && rule.NetWork() != metadata.NetWork {
 				continue
 			}
 			return adapter, rule, nil
