@@ -28,7 +28,7 @@ import (
 
 const (
 	rateMeasurementGranularity = uint64((time.Second / 2) / time.Nanosecond)
-	spinloopRateThreshold      = 800000000 / 8                                   // 800mbps
+	spinloopRateThreshold      = 1000000000 / 8                                  // 1000mbps
 	spinloopDuration           = uint64(time.Millisecond / 80 / time.Nanosecond) // ~1gbit/s
 
 	messageTransportHeaderSize = 0 // size of data preceding content in transport message
@@ -81,7 +81,7 @@ func OpenTunDevice(deviceURL url.URL) (TunDevice, error) {
 	}
 
 	interfaceName := "Clash"
-	mtu := 9000
+	mtu := 1420
 
 	tun, err := CreateTUN(interfaceName, mtu)
 	if err != nil {
@@ -148,7 +148,7 @@ func CreateTUNWithRequestedGUID(ifname string, requestedGUID *windows.GUID, mtu 
 		tun.name = realInterfaceName
 	}
 
-	tun.session, err = wt.StartSession(0x800000) // Ring capacity, 8 MiB
+	tun.session, err = wt.StartSession(0x4000000) // Ring capacity, 64 MiB
 	if err != nil {
 		tun.wt.Delete(false)
 		return nil, fmt.Errorf("Error starting session: %w", err)
