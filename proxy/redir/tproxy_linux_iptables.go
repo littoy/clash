@@ -68,8 +68,9 @@ func SetTProxyLinuxIPTables(ifname string, tport int, dport int) error {
 	// set pre routing
 	execCmd("iptables -t mangle -N clash_prerouting")
 	execCmd("iptables -t mangle -F clash_prerouting")
-	execCmd("iptables -t mangle -A clash_prerouting -p udp --dport 53 -j RETURN")
-	execCmd("iptables -t mangle -A clash_prerouting -p tcp --dport 53 -j RETURN")
+	execCmd("iptables -t mangle -A clash_prerouting -s 172.17.0.0/16 -j RETURN")
+	execCmd("iptables -t mangle -A clash_prerouting -p udp --dport 53 -j ACCEPT")
+	execCmd("iptables -t mangle -A clash_prerouting -p tcp --dport 53 -j ACCEPT")
 	execCmd("iptables -t mangle -A clash_prerouting -m addrtype --dst-type LOCAL -j RETURN")
 	addLocalnetworkToChain("clash_prerouting")
 	execCmd("iptables -t mangle -A clash_prerouting -p tcp -m socket -j clash_divert")
@@ -78,8 +79,8 @@ func SetTProxyLinuxIPTables(ifname string, tport int, dport int) error {
 	execCmd(fmt.Sprintf("iptables -t mangle -A clash_prerouting -p udp -j TPROXY --on-port %d --tproxy-mark %s/%s", tproxyPort, PROXY_FWMARK, PROXY_FWMARK))
 	execCmd("iptables -t mangle -A PREROUTING -j clash_prerouting")
 
-	execCmd(fmt.Sprintf("iptables -t nat -I PREROUTING ! -d 127.0.0.0/8 -p tcp --dport 53 -j REDIRECT --to %d", dnsPort))
-	execCmd(fmt.Sprintf("iptables -t nat -I PREROUTING ! -d 127.0.0.0/8 -p udp --dport 53 -j REDIRECT --to %d", dnsPort))
+	execCmd(fmt.Sprintf("iptables -t nat -I PREROUTING ! -s 172.17.0.0/16 ! -d 127.0.0.0/8 -p tcp --dport 53 -j REDIRECT --to %d", dnsPort))
+	execCmd(fmt.Sprintf("iptables -t nat -I PREROUTING ! -s 172.17.0.0/16 ! -d 127.0.0.0/8 -p udp --dport 53 -j REDIRECT --to %d", dnsPort))
 
 	// set post routing
 	execCmd(fmt.Sprintf("iptables -t nat -A POSTROUTING -o %s -m addrtype ! --src-type LOCAL -j MASQUERADE", interfaceName))
@@ -88,8 +89,8 @@ func SetTProxyLinuxIPTables(ifname string, tport int, dport int) error {
 	execCmd("iptables -t mangle -N clash_output")
 	execCmd("iptables -t mangle -F clash_output")
 	execCmd(fmt.Sprintf("iptables -t mangle -A clash_output -m owner --uid-owner %s -j RETURN", ownerUid))
-	execCmd("iptables -t mangle -A clash_output -p udp -m multiport --dports 53,123,137 -j RETURN")
-	execCmd("iptables -t mangle -A clash_output -p tcp --dport 53 -j RETURN")
+	execCmd("iptables -t mangle -A clash_output -p udp -m multiport --dports 53,123,137 -j ACCEPT")
+	execCmd("iptables -t mangle -A clash_output -p tcp --dport 53 -j ACCEPT")
 	execCmd("iptables -t mangle -A clash_output -m addrtype --dst-type LOCAL -j RETURN")
 	execCmd("iptables -t mangle -A clash_output -m addrtype --dst-type BROADCAST -j RETURN")
 	addLocalnetworkToChain("clash_output")
@@ -101,10 +102,11 @@ func SetTProxyLinuxIPTables(ifname string, tport int, dport int) error {
 	execCmd("iptables -t nat -N clash_dns_output")
 	execCmd("iptables -t nat -F clash_dns_output")
 	execCmd(fmt.Sprintf("iptables -t nat -A clash_dns_output -m owner --uid-owner %s -j RETURN", ownerUid))
+	execCmd("iptables -t nat -A clash_dns_output -s 172.17.0.0/16 -j RETURN")
 	execCmd(fmt.Sprintf("iptables -t nat -A clash_dns_output -p udp -j REDIRECT --to-ports %d", dnsPort))
 	execCmd(fmt.Sprintf("iptables -t nat -A clash_dns_output -p tcp -j REDIRECT --to-ports %d", dnsPort))
-	execCmd("iptables -t nat -I OUTPUT ! -d 127.0.0.0/8 -p tcp --dport 53 -j clash_dns_output")
-	execCmd("iptables -t nat -I OUTPUT ! -d 127.0.0.0/8 -p udp --dport 53 -j clash_dns_output")
+	execCmd("iptables -t nat -I OUTPUT -p tcp --dport 53 -j clash_dns_output")
+	execCmd("iptables -t nat -I OUTPUT -p udp --dport 53 -j clash_dns_output")
 
 	log.Infoln("[TProxy] Setting iptables completed")
 	return nil
@@ -134,8 +136,8 @@ func CleanUpTProxyLinuxIPTables() {
 	execCmd(fmt.Sprintf("iptables -t filter -D FORWARD -o %s -j ACCEPT", interfaceName))
 
 	// clean PREROUTING
-	execCmd(fmt.Sprintf("iptables -t nat -D PREROUTING ! -d 127.0.0.0/8 -p tcp --dport 53 -j REDIRECT --to %d", dnsPort))
-	execCmd(fmt.Sprintf("iptables -t nat -D PREROUTING ! -d 127.0.0.0/8 -p udp --dport 53 -j REDIRECT --to %d", dnsPort))
+	execCmd(fmt.Sprintf("iptables -t nat -D PREROUTING ! -s 172.17.0.0/16 ! -d 127.0.0.0/8 -p tcp --dport 53 -j REDIRECT --to %d", dnsPort))
+	execCmd(fmt.Sprintf("iptables -t nat -D PREROUTING ! -s 172.17.0.0/16 ! -d 127.0.0.0/8 -p udp --dport 53 -j REDIRECT --to %d", dnsPort))
 	execCmd("iptables -t mangle -D PREROUTING -j clash_prerouting")
 
 	// clean POSTROUTING
@@ -143,8 +145,8 @@ func CleanUpTProxyLinuxIPTables() {
 
 	// clean OUTPUT
 	execCmd(fmt.Sprintf("iptables -t mangle -D OUTPUT -o %s -j clash_output", interfaceName))
-	execCmd("iptables -t nat -D OUTPUT ! -d 127.0.0.0/8 -p tcp --dport 53 -j clash_dns_output")
-	execCmd("iptables -t nat -D OUTPUT ! -d 127.0.0.0/8 -p udp --dport 53 -j clash_dns_output")
+	execCmd("iptables -t nat -D OUTPUT -p tcp --dport 53 -j clash_dns_output")
+	execCmd("iptables -t nat -D OUTPUT -p udp --dport 53 -j clash_dns_output")
 
 	// clean chain
 	execCmd("iptables -t mangle -F clash_prerouting")
