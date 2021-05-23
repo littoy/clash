@@ -1,7 +1,6 @@
 package outbound
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/binary"
@@ -17,16 +16,12 @@ import (
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/transport/vless"
 	"github.com/Dreamacro/clash/transport/vmess"
+	xtls "github.com/xtls/go"
 )
 
 const (
 	// max packet length
-	maxLength = 2046
-)
-
-var (
-	defaultALPN = []string{"h2", "http/1.1"}
-	bufPool     = sync.Pool{New: func() interface{} { return &bytes.Buffer{} }}
+	maxLength = 8192
 )
 
 type Vless struct {
@@ -41,18 +36,13 @@ type VlessOption struct {
 	Port           int               `proxy:"port"`
 	UUID           string            `proxy:"uuid"`
 	UDP            bool              `proxy:"udp,omitempty"`
-	ALPN           []string          `proxy:"alpn,omitempty"`
 	TLS            bool              `proxy:"tls,omitempty"`
 	Network        string            `proxy:"network,omitempty"`
 	WSPath         string            `proxy:"ws-path,omitempty"`
 	WSHeaders      map[string]string `proxy:"ws-headers,omitempty"`
 	SkipCertVerify bool              `proxy:"skip-cert-verify,omitempty"`
 	ServerName     string            `proxy:"servername,omitempty"`
-	Timeout        int               `proxy:"timeout,omitempty"`
-	MaxLoss        int               `proxy:"max-loss,omitempty"`
-	ForbidDuration int               `proxy:"forbid-duration,omitempty"`
-	MaxFail        int               `proxy:"max-fail,omitempty"`
-	PingServer     string            `proxy:"ping-server,omitempty"`
+	Flow           string            `proxy:"flow,omitempty"`
 }
 
 func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
@@ -74,46 +64,59 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 			wsOpts.Headers = header
 		}
 
-		//if v.option.TLS {
-		wsOpts.TLS = true
-		wsOpts.SessionCache = getClientSessionCache()
-		wsOpts.SkipCertVerify = v.option.SkipCertVerify
-		wsOpts.ServerName = v.option.ServerName
-		//}
+		if v.option.TLS {
+			wsOpts.TLS = true
+			wsOpts.SessionCache = getClientSessionCache()
+			wsOpts.SkipCertVerify = v.option.SkipCertVerify
+			wsOpts.ServerName = v.option.ServerName
+		}
 		c, err = vmess.StreamWebsocketConn(c, wsOpts, nil)
 	default:
-		alpn := defaultALPN
-		if len(v.option.ALPN) != 0 {
-			alpn = v.option.ALPN
+		// handle TLS
+		if v.option.TLS {
+			host, _, _ := net.SplitHostPort(v.addr)
+
+			if v.option.Flow == vless.XRO || v.option.Flow == vless.XRD || v.option.Flow == vless.XRS {
+				xtlsConfig := &xtls.Config{
+					ServerName:         host,
+					InsecureSkipVerify: v.option.SkipCertVerify,
+					ClientSessionCache: getClientXSessionCache(),
+				}
+
+				if v.option.ServerName != "" {
+					xtlsConfig.ServerName = v.option.ServerName
+				}
+				xtlsConn := xtls.Client(c, xtlsConfig)
+				if err = xtlsConn.Handshake(); err != nil {
+					return nil, err
+				}
+
+				c = xtlsConn
+			} else {
+				tlsConfig := &tls.Config{
+					ServerName:         host,
+					InsecureSkipVerify: v.option.SkipCertVerify,
+					ClientSessionCache: getClientSessionCache(),
+				}
+				if v.option.ServerName != "" {
+					tlsConfig.ServerName = v.option.ServerName
+				}
+				tlsConn := tls.Client(c, tlsConfig)
+				if err = tlsConn.Handshake(); err != nil {
+					return nil, err
+				}
+
+				c = tlsConn
+			}
+
 		}
-
-		host, _, _ := net.SplitHostPort(v.addr)
-
-		tlsConfig := &tls.Config{
-			NextProtos:         alpn,
-			MinVersion:         tls.VersionTLS12,
-			InsecureSkipVerify: v.option.SkipCertVerify,
-			ServerName:         host,
-			ClientSessionCache: getClientSessionCache(),
-		}
-
-		if v.option.ServerName != "" {
-			tlsConfig.ServerName = v.option.ServerName
-		}
-
-		tlsConn := tls.Client(c, tlsConfig)
-		if err := tlsConn.Handshake(); err != nil {
-			return nil, err
-		}
-
-		c = tlsConn
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	return v.client.StreamConn(c, parseVlessAddr(metadata))
+	return v.client.StreamConn(c, parseVmessAddr(metadata))
 }
 
 func (v *Vless) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn, error) {
@@ -152,22 +155,29 @@ func (v *Vless) DialUDP(metadata *C.Metadata) (C.PacketConn, error) {
 }
 
 func NewVless(option VlessOption) (*Vless, error) {
-	client, err := vless.NewClient(option.UUID)
+	var addons *vless.Addons
+	if option.TLS && option.Network != "ws" && option.Flow != "" {
+		switch option.Flow {
+		case vless.XRO, vless.XRD, vless.XRS:
+			addons = &vless.Addons{
+				Flow: option.Flow,
+			}
+		default:
+			return nil, fmt.Errorf("unsupported vless flow type: %s", option.Flow)
+		}
+	}
+
+	client, err := vless.NewClient(option.UUID, addons)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Vless{
 		Base: &Base{
-			name:           option.Name,
-			addr:           net.JoinHostPort(option.Server, strconv.Itoa(option.Port)),
-			tp:             C.Vless,
-			udp:            option.UDP,
-			timeout:        option.Timeout,
-			maxloss:        option.MaxLoss,
-			forbidDuration: option.ForbidDuration,
-			maxFail:        option.MaxFail,
-			pingAddr:       option.PingServer,
+			name: option.Name,
+			addr: net.JoinHostPort(option.Server, strconv.Itoa(option.Port)),
+			tp:   C.Vless,
+			udp:  true,
 		},
 		client: client,
 		option: &option,
@@ -177,6 +187,7 @@ func NewVless(option VlessOption) (*Vless, error) {
 func newVlessPacketConn(c net.Conn, addr net.Addr) *vlessPacketConn {
 	return &vlessPacketConn{Conn: c,
 		rAddr: addr,
+		cache: make([]byte, 0, maxLength+2),
 	}
 }
 
@@ -185,22 +196,17 @@ type vlessPacketConn struct {
 	rAddr  net.Addr
 	remain int
 	mux    sync.Mutex
+	cache  []byte
 }
 
 func (c *vlessPacketConn) writePacket(b []byte, addr net.Addr) (int, error) {
 	length := len(b)
-	if length == 0 {
-		return 0, nil
-	}
-
-	buffer := bufPool.Get().(*bytes.Buffer)
-	defer bufPool.Put(buffer)
-	defer buffer.Reset()
-
-	buffer.WriteByte(byte(length >> 8))
-	buffer.WriteByte(byte(length))
-	buffer.Write(b)
-	n, err := c.Conn.Write(buffer.Bytes())
+	defer func() {
+		c.cache = c.cache[:0]
+	}()
+	c.cache = append(c.cache, byte(length>>8), byte(length))
+	c.cache = append(c.cache, b...)
+	n, err := c.Conn.Write(c.cache)
 	if n > 2 {
 		return n - 2, err
 	}
@@ -263,32 +269,4 @@ func (c *vlessPacketConn) ReadFrom(b []byte) (int, net.Addr, error) {
 		c.remain = remain
 	}
 	return n, c.rAddr, err
-}
-
-func parseVlessAddr(metadata *C.Metadata) *vless.DstAddr {
-	var addrType byte
-	var addr []byte
-	switch metadata.AddrType {
-	case C.AtypIPv4:
-		addrType = byte(vless.AtypIPv4)
-		addr = make([]byte, net.IPv4len)
-		copy(addr[:], metadata.DstIP.To4())
-	case C.AtypIPv6:
-		addrType = byte(vless.AtypIPv6)
-		addr = make([]byte, net.IPv6len)
-		copy(addr[:], metadata.DstIP.To16())
-	case C.AtypDomainName:
-		addrType = byte(vless.AtypDomainName)
-		addr = make([]byte, len(metadata.Host)+1)
-		addr[0] = byte(len(metadata.Host))
-		copy(addr[1:], []byte(metadata.Host))
-	}
-
-	port, _ := strconv.Atoi(metadata.DstPort)
-	return &vless.DstAddr{
-		UDP:      metadata.NetWork == C.UDP,
-		AddrType: addrType,
-		Addr:     addr,
-		Port:     uint(port),
-	}
 }
