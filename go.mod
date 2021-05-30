@@ -7,9 +7,8 @@ require (
 	github.com/go-chi/chi/v5 v5.0.3
 	github.com/go-chi/cors v1.2.0
 	github.com/go-chi/render v1.0.1
-	github.com/go-ping/ping v0.0.0-20210407214646-e4e642a95741 // indirect
+	github.com/go-ping/ping v0.0.0-20210407214646-e4e642a95741
 	github.com/gofrs/uuid v4.0.0+incompatible
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/miekg/dns v1.1.42
 	github.com/oschwald/geoip2-golang v1.5.0
