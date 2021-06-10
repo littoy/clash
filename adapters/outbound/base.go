@@ -268,15 +268,21 @@ func (p *Proxy) MarshalJSON() ([]byte, error) {
 
 // implements C.Proxy
 func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, err error) {
+	var groupTypes = map[string]string{"Direct": "1", "Reject": "1", "Pass": "1", "Relay": "1", "Selector": "1", "Fallback": "1", "URLTest": "1", "LoadBalance": "1"}
 	defer func() {
 		if err != nil || t >= uint16(p.Timeout()) || l >= uint16(p.MaxLoss()) {
-			p.SetFailCount(p.FailCount() + 1)
-			if p.FailCount() >= p.MaxFail() {
-				// log.Errorln("proxy dead of error: %s %s duration: %d loss: %d", p.Name(), time.Now().Format("2006-01-02 15:04:05"), t, l)
-				log.Errorln("proxy dead of error: %s duration: %d loss: %d e: %s", p.Name(), t, l, err.Error())
+			_, groupType := groupTypes[p.Type().String()]
+			if groupType {
 				p.alive.Store(false)
-				if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
-					p.SetDownFrom(time.Now().Unix())
+			} else {
+				p.SetFailCount(p.FailCount() + 1)
+				if p.FailCount() >= p.MaxFail() {
+					// log.Errorln("proxy dead of error: %s %s duration: %d loss: %d", p.Name(), time.Now().Format("2006-01-02 15:04:05"), t, l)
+					log.Errorln("proxy dead of error: %s duration: %d loss: %d e: %s", p.Name(), t, l, err.Error())
+					p.alive.Store(false)
+					if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
+						p.SetDownFrom(time.Now().Unix())
+					}
 				}
 			}
 		} else {
