@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Dreamacro/clash/log"
+
 	"github.com/Dreamacro/clash/common/queue"
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/go-ping/ping"
@@ -192,6 +194,7 @@ func (p *Proxy) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn, 
 	if err != nil {
 		p.SetFailCount(p.FailCount() + 1)
 		if p.FailCount() >= p.MaxFail() {
+			log.Errorln("proxy dead of error: %s %s %s", p.Name(), time.Now().Format("2006-01-02 15:04:05"), err.Error())
 			p.alive.Store(false)
 			if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
 				p.SetDownFrom(time.Now().Unix())
@@ -268,6 +271,7 @@ func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, er
 		if err != nil || t >= uint16(p.Timeout()) || l >= uint16(p.MaxLoss()) {
 			p.SetFailCount(p.FailCount() + 1)
 			if p.FailCount() >= p.MaxFail() {
+				log.Errorln("proxy dead of error: %s %s duration: %d loss: %d", p.Name(), time.Now().Format("2006-01-02 15:04:05"), t, l)
 				p.alive.Store(false)
 				if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
 					p.SetDownFrom(time.Now().Unix())
@@ -350,8 +354,8 @@ func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, er
 			return
 		}
 		pinger.Count = 10
-		pinger.Interval = 100 * time.Millisecond
-		pinger.Timeout = 2000 * time.Millisecond
+		pinger.Interval = 200 * time.Millisecond
+		pinger.Timeout = 3000 * time.Millisecond
 		err2 = pinger.Run() // Blocks until finished.
 		if err2 != nil {
 			return
