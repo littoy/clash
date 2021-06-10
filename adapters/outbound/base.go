@@ -186,6 +186,7 @@ func (p *Proxy) Dial(metadata *C.Metadata) (C.Conn, error) {
 func (p *Proxy) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn, error) {
 	_, deadlineSeted := ctx.Deadline()
 	var cancel context.CancelFunc = nil
+	var startTime = time.Now().Unix()
 	if !deadlineSeted {
 		ctx, cancel = context.WithTimeout(ctx, tcpTimeout)
 		defer cancel()
@@ -195,7 +196,7 @@ func (p *Proxy) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn, 
 		p.SetFailCount(p.FailCount() + 1)
 		if p.FailCount() >= p.MaxFail() {
 			// log.Errorln("proxy dead of error: %s %s %s", p.Name(), time.Now().Format("2006-01-02 15:04:05"), err.Error())
-			log.Errorln("proxy dead of error: %s %s", p.Name(), err.Error())
+			log.Errorln("DialContext error: %s %s dialtime: %d", p.Name(), err.Error(), time.Now().Unix()-startTime)
 			p.alive.Store(false)
 			if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
 				p.SetDownFrom(time.Now().Unix())
@@ -278,7 +279,10 @@ func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, er
 				p.SetFailCount(p.FailCount() + 1)
 				if p.FailCount() >= p.MaxFail() {
 					// log.Errorln("proxy dead of error: %s %s duration: %d loss: %d", p.Name(), time.Now().Format("2006-01-02 15:04:05"), t, l)
-					log.Errorln("proxy dead of error: %s duration: %d loss: %d e: %s", p.Name(), t, l, err.Error())
+					log.Errorln("URLTest error: %s duration: %d loss: %d", p.Name(), t, l)
+					if err != nil {
+						log.Errorln("error: %s", err.Error())
+					}
 					p.alive.Store(false)
 					if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
 						p.SetDownFrom(time.Now().Unix())
