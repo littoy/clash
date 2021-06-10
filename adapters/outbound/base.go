@@ -374,9 +374,12 @@ func (p *Proxy) URLTest(ctx context.Context, url string) (t uint16, l uint16, er
 		}
 		stats := pinger.Statistics()
 		l = uint16(stats.PacketLoss)
-		if l < 100 { //ignore block ping server
+		if l < 100 {
+			if l > 0 && pinger.IPAddr() != nil {
+				log.Errorln("ping host: %s ip: %s", host, pinger.IPAddr())
+			}
 			t = t + (l*l/100)*(l*l/100)
-		} else {
+		} else { //ignore block ping server
 			l = 0
 		}
 	}
