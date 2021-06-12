@@ -192,7 +192,8 @@ func (p *Proxy) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn, 
 		defer cancel()
 	}
 	conn, err := p.ProxyAdapter.DialContext(ctx, metadata)
-	if err != nil {
+
+	if err != nil && p.Type().String() != "Direct" {
 		p.SetFailCount(p.FailCount() + 1)
 		if p.FailCount() >= p.MaxFail() {
 			// log.Errorln("proxy dead of error: %s %s %s", p.Name(), time.Now().Format("2006-01-02 15:04:05"), err.Error())
