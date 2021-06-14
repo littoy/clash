@@ -192,15 +192,17 @@ func (p *Proxy) DialContext(ctx context.Context, metadata *C.Metadata) (C.Conn, 
 		defer cancel()
 	}
 	conn, err := p.ProxyAdapter.DialContext(ctx, metadata)
-
-	if err != nil && p.Type().String() != "Direct" {
-		p.SetFailCount(p.FailCount() + 1)
-		if p.FailCount() >= p.MaxFail() {
-			// log.Errorln("proxy dead of error: %s %s %s", p.Name(), time.Now().Format("2006-01-02 15:04:05"), err.Error())
-			log.Errorln("DialContext error: %s %s dialtime: %d", p.Name(), err.Error(), time.Now().Unix()-startTime)
-			p.alive.Store(false)
-			if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
-				p.SetDownFrom(time.Now().Unix())
+	var dialTime = time.Now().Unix() - startTime
+	if p.Type().String() != "Direct" && (p.Unwrap(metadata) == nil || p.Unwrap(metadata).Type().String() != "Direct") {
+		if err != nil || dialTime > int64(p.Timeout()) {
+			p.SetFailCount(p.FailCount() + 1)
+			if p.FailCount() >= p.MaxFail() {
+				// log.Errorln("proxy dead of error: %s %s %s", p.Name(), time.Now().Format("2006-01-02 15:04:05"), err.Error())
+				log.Errorln("DialContext error: %s %s dialtime: %d", p.Name(), err.Error(), dialTime)
+				p.alive.Store(false)
+				if p.ForbidDuration() > 0 && p.DownFrom() == 0 {
+					p.SetDownFrom(time.Now().Unix())
+				}
 			}
 		}
 	}
