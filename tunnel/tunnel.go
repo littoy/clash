@@ -14,6 +14,7 @@ import (
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/context"
 	"github.com/Dreamacro/clash/log"
+	R "github.com/Dreamacro/clash/rule"
 	"github.com/Dreamacro/clash/tunnel/statistic"
 )
 
@@ -31,6 +32,8 @@ var (
 
 	// default timeout for UDP session
 	udpTimeout = 60 * time.Second
+
+	preProcessCacheFinder, _ = R.NewProcess("", "", C.ALLNet)
 )
 
 func init() {
@@ -307,6 +310,9 @@ func match(metadata *C.Metadata) (C.Proxy, C.Rule, error) {
 		metadata.DstIP = ip
 		resolved = true
 	}
+
+	// preset process name and cache it
+	preProcessCacheFinder.Match(metadata)
 
 	for _, rule := range rules {
 		if !resolved && shouldResolveIP(rule, metadata) {

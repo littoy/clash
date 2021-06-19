@@ -71,6 +71,7 @@ type Metadata struct {
 	DstPort  string  `json:"destinationPort"`
 	AddrType int     `json:"-"`
 	Host     string  `json:"host"`
+	Process  string  `json:"process"`
 }
 
 func (m *Metadata) RemoteAddress() string {
