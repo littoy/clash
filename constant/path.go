@@ -53,10 +53,18 @@ func (p *path) Resolve(path string) string {
 	return path
 }
 
-func (p *path) MMDB() string {
-	return P.Join(p.homeDir, "Country.mmdb")
-}
-
 func (p *path) Cache() string {
 	return P.Join(p.homeDir, ".cache")
+}
+
+func (p *path) GeoIP() string {
+	return P.Join(p.homeDir, "geoip.dat")
+}
+
+func (p *path) GeoSite() string {
+	return P.Join(p.homeDir, "geosite.dat")
+}
+
+func (p *path) GetAssetLocation(file string) string {
+	return P.Join(p.homeDir, file)
 }
