@@ -15,6 +15,7 @@ type GEOIP struct {
 	country      string
 	adapter      string
 	noResolveIP  bool
+	network      C.NetWork
 	geoIPMatcher *router.GeoIPMatcher
 }
 
@@ -42,7 +43,11 @@ func (g *GEOIP) ShouldResolveIP() bool {
 	return !g.noResolveIP
 }
 
-func NewGEOIP(country string, adapter string, noResolveIP bool) (*GEOIP, error) {
+func (g *GEOIP) NetWork() C.NetWork {
+	return g.network
+}
+
+func NewGEOIP(country string, adapter string, noResolveIP bool, network C.NetWork) (*GEOIP, error) {
 	geoLoaderName := "standard"
 	//geoLoaderName := "memconservative"
 	geoLoader, err := geodata.GetGeoDataLoader(geoLoaderName)
@@ -73,6 +78,7 @@ func NewGEOIP(country string, adapter string, noResolveIP bool) (*GEOIP, error) 
 		country:      country,
 		adapter:      adapter,
 		noResolveIP:  noResolveIP,
+		network:      network,
 		geoIPMatcher: geoIPMatcher,
 	}
 

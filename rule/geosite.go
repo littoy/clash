@@ -14,6 +14,7 @@ import (
 type GEOSITE struct {
 	country string
 	adapter string
+	network C.NetWork
 	matcher *router.DomainMatcher
 }
 
@@ -42,7 +43,11 @@ func (gs *GEOSITE) ShouldResolveIP() bool {
 	return false
 }
 
-func NewGEOSITE(country string, adapter string) (*GEOSITE, error) {
+func (gs *GEOSITE) NetWork() C.NetWork {
+	return gs.network
+}
+
+func NewGEOSITE(country string, adapter string, network C.NetWork) (*GEOSITE, error) {
 	geoLoaderName := "standard"
 	//geoLoaderName := "memconservative"
 	geoLoader, err := geodata.GetGeoDataLoader(geoLoaderName)
@@ -69,6 +74,7 @@ func NewGEOSITE(country string, adapter string) (*GEOSITE, error) {
 	geoSite := &GEOSITE{
 		country: country,
 		adapter: adapter,
+		network: network,
 		matcher: matcher,
 	}
 

@@ -14,6 +14,7 @@ const (
 
 	TCP NetWork = iota
 	UDP
+	ALLNet
 
 	HTTP Type = iota
 	HTTPCONNECT
@@ -27,8 +28,10 @@ type NetWork int
 func (n NetWork) String() string {
 	if n == TCP {
 		return "tcp"
+	} else if n == UDP {
+		return "udp"
 	}
-	return "udp"
+	return "all"
 }
 
 func (n NetWork) MarshalJSON() ([]byte, error) {
