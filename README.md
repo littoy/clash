@@ -37,6 +37,42 @@
 ## Getting Started
 Documentations are now moved to [GitHub Wiki](https://github.com/Dreamacro/clash/wiki).
 
+## Advanced usage for this branch
+### Rules configuration
+- Support rule `GEOSITE`
+- Support rule `GEOIP` not match condition
+- Support `network` condition for all rules
+
+The `GEOSITE` and `GEOIP` databases via https://github.com/Loyalsoldier/v2ray-rules-dat
+```yaml
+rules:
+  # network condition
+  - DOMAIN-SUFFIX,tabao.com,DIRECT,tcp
+  - DST-PORT,123,DIRECT,udp
+  
+  # rule GEOSITE
+  - GEOSITE,category-ads-all,REJECT
+  - GEOSITE,icloud@cn,DIRECT
+  - GEOSITE,apple@cn,DIRECT
+  - GEOSITE,microsoft@cn,DIRECT
+  - GEOSITE,youtube,PROXY
+  - GEOSITE,geolocation-cn,DIRECT
+  #- GEOSITE,geolocation-!cn,PROXY
+
+  - GEOIP,private,DIRECT,no-resolve
+  - GEOIP,cn,DIRECT
+    
+  # rule GEOIP not match condition
+  - GEOIP,!cn,PROXY
+
+  - MATCH,PROXY
+```
+
+### Display Process name
+Add field `Process` to `Metadata` and prepare to get process name for Restful API `GET /connections`
+
+To display process name in GUI please use https://yaling888.github.io/yacd/
+
 ## Premium Release
 [Release](https://github.com/Dreamacro/clash/releases/tag/premium)
 
