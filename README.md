@@ -39,19 +39,19 @@ Documentations are now moved to [GitHub Wiki](https://github.com/Dreamacro/clash
 
 ## Advanced usage for this branch
 ### Rules configuration
-- Support rule `GEOSITE`
-- Support `multiport` condition for rule `SRC-PORT` and `DST-PORT`
-- Support not match condition for rule `GEOIP`
-- Support `network` condition for all rules
+- Support rule `GEOSITE`.
+- Support `multiport` condition for rule `SRC-PORT` and `DST-PORT`.
+- Support not match condition for rule `GEOIP`.
+- Support `network` condition for all rules.
 
-The `GEOSITE` and `GEOIP` databases via https://github.com/Loyalsoldier/v2ray-rules-dat
+The `GEOSITE` and `GEOIP` databases via https://github.com/Loyalsoldier/v2ray-rules-dat.
 ```yaml
 rules:
   # network condition for rules
   - DOMAIN-SUFFIX,bilibili.com,DIRECT,tcp
   - DOMAIN-SUFFIX,bilibili.com,REJECT,udp
     
-  # multiport condition for rule SRC-PORT and DST-PORT
+  # multiport condition for rules SRC-PORT and DST-PORT
   - DST-PORT,123/136/137-139,DIRECT,udp
   
   # rule GEOSITE
@@ -78,21 +78,34 @@ rules:
 ```
 
 ### Proxies configuration
-Support outbound transport protocol `VLESS`
+Support outbound transport protocol `VLESS`.
+
+The XTLS only support TCP transport with the XRAY-CORE server.
 ```yaml
 proxies:
-  - name: "vless"
+  - name: "vless-tcp"
     type: vless
     server: server
     port: 443
     uuid: uuid
+    network: tcp
+    servername: example.com # AKA SNI
     # udp: true
+    # flow: xtls-rprx-direct # xtls-rprx-origin  # enable XTLS
     # skip-cert-verify: true
-    # servername: example.com # priority over wss host
-    # network: ws # not support xtls
-    # ws-path: /path
-    # ws-headers:
-    #   Host: v2ray.com
+    
+  - name: "vless-ws"
+    type: vless
+    server: server
+    port: 443
+    uuid: uuid
+    udp: true
+    network: ws
+    servername: example.com # priority over wss host
+    # skip-cert-verify: true
+    ws-path: /path
+    ws-headers:
+      Host: example.com
 
   - name: "vless-h2"
     type: vless
@@ -100,7 +113,8 @@ proxies:
     port: 443
     uuid: uuid
     network: h2
-    # flow: xtls-rprx-direct # xtls-rprx-origin xtls-rprx-direct # enable xtls
+    servername: example.com
+    # skip-cert-verify: true
     h2-opts:
       host:
         - http.example.com
@@ -113,16 +127,17 @@ proxies:
     port: 443
     uuid: uuid
     # udp: true
-    # network: http
-    # flow: xtls-rprx-direct # xtls-rprx-origin xtls-rprx-direct # enable xtls
-    # http-opts:
-    #   # method: "GET"
-    #   # path:
-    #   #   - '/'
-    #   #   - '/video'
-    #   # headers:
-    #   #   Connection:
-    #   #     - keep-alive
+    network: http
+    servername: example.com
+    # skip-cert-verify: true
+    http-opts:
+      method: "GET"
+      path:
+        - '/'
+        - '/video'
+      headers:
+        Connection:
+          - keep-alive
 
   - name: vless-grpc
     server: server
@@ -130,7 +145,6 @@ proxies:
     type: vless
     uuid: uuid
     network: grpc
-    # flow: xtls-rprx-direct # xtls-rprx-origin xtls-rprx-direct # enable xtls
     servername: example.com
     # skip-cert-verify: true
     grpc-opts:
