@@ -16,41 +16,43 @@ type fallbackIPFilter interface {
 	Match(net.IP) bool
 }
 
-type geoipFilter struct{}
+type geoipFilter struct {
+	code string
+}
 
 func (gf *geoipFilter) Match(ip net.IP) bool {
 	if multiGeoIPMatcher == nil {
-		countryCodeCN := "cn"
-		countryCodePrivate := "private"
+		countryCode := gf.code
+		//countryCodePrivate := "private"
 		geoLoader, err := geodata.GetGeoDataLoader("standard")
 		if err != nil {
 			log.Errorln("[GeoIPFilter] GetGeoDataLoader error: %s", err.Error())
 			return false
 		}
 
-		recordsCN, err := geoLoader.LoadGeoIP(countryCodeCN)
+		recordsCN, err := geoLoader.LoadGeoIP(countryCode)
 		if err != nil {
 			log.Errorln("[GeoIPFilter] LoadGeoIP error: %s", err.Error())
 			return false
 		}
 
-		recordsPrivate, err := geoLoader.LoadGeoIP(countryCodePrivate)
-		if err != nil {
-			log.Errorln("[GeoIPFilter] LoadGeoIP error: %s", err.Error())
-			return false
-		}
+		//recordsPrivate, err := geoLoader.LoadGeoIP(countryCodePrivate)
+		//if err != nil {
+		//	log.Errorln("[GeoIPFilter] LoadGeoIP error: %s", err.Error())
+		//	return false
+		//}
 
 		geoips := []*router.GeoIP{
 			{
-				CountryCode:  countryCodeCN,
+				CountryCode:  countryCode,
 				Cidr:         recordsCN,
 				ReverseMatch: false,
 			},
-			{
-				CountryCode:  countryCodePrivate,
-				Cidr:         recordsPrivate,
-				ReverseMatch: false,
-			},
+			//{
+			//	CountryCode:  countryCodePrivate,
+			//	Cidr:         recordsPrivate,
+			//	ReverseMatch: false,
+			//},
 		}
 
 		multiGeoIPMatcher, err = router.NewMultiGeoIPMatcher(geoips)
@@ -61,7 +63,7 @@ func (gf *geoipFilter) Match(ip net.IP) bool {
 		}
 	}
 
-	return !multiGeoIPMatcher.ApplyIp(ip)
+	return !multiGeoIPMatcher.ApplyIp(ip) && !ip.IsPrivate()
 }
 
 type ipnetFilter struct {

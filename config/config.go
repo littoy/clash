@@ -72,9 +72,10 @@ type DNS struct {
 
 // FallbackFilter config
 type FallbackFilter struct {
-	GeoIP  bool         `yaml:"geoip"`
-	IPCIDR []*net.IPNet `yaml:"ipcidr"`
-	Domain []string     `yaml:"domain"`
+	GeoIP     bool         `yaml:"geoip"`
+	GeoIPCode string       `yaml:"geoip-code"`
+	IPCIDR    []*net.IPNet `yaml:"ipcidr"`
+	Domain    []string     `yaml:"domain"`
 }
 
 // Profile config
@@ -114,9 +115,10 @@ type RawDNS struct {
 }
 
 type RawFallbackFilter struct {
-	GeoIP  bool     `yaml:"geoip"`
-	IPCIDR []string `yaml:"ipcidr"`
-	Domain []string `yaml:"domain"`
+	GeoIP     bool     `yaml:"geoip"`
+	GeoIPCode string   `yaml:"geoip-code"`
+	IPCIDR    []string `yaml:"ipcidr"`
+	Domain    []string `yaml:"domain"`
 }
 
 type RawConfig struct {
@@ -173,8 +175,9 @@ func UnmarshalRawConfig(buf []byte) (*RawConfig, error) {
 			UseHosts:    true,
 			FakeIPRange: "198.18.0.1/16",
 			FallbackFilter: RawFallbackFilter{
-				GeoIP:  true,
-				IPCIDR: []string{},
+				GeoIP:     true,
+				GeoIPCode: "CN",
+				IPCIDR:    []string{},
 			},
 			DefaultNameserver: []string{
 				"114.114.114.114",
@@ -383,15 +386,22 @@ func parseRules(cfg *RawConfig, proxies map[string]C.Proxy) ([]C.Rule, error) {
 	for idx, line := range rulesConfig {
 		rule := trimArr(strings.Split(line, ","))
 		var (
-			payload string
-			target  string
-			params  = []string{}
+			payload  string
+			target   string
+			params   = []string{}
+			ruleName = strings.ToUpper(rule[0])
 		)
 
 		switch l := len(rule); {
 		case l == 2:
 			target = rule[1]
 		case l == 3:
+			if ruleName == "MATCH" {
+				payload = ""
+				target = rule[1]
+				params = rule[2:]
+				break
+			}
 			payload = rule[1]
 			target = rule[2]
 		case l >= 4:
@@ -406,10 +416,10 @@ func parseRules(cfg *RawConfig, proxies map[string]C.Proxy) ([]C.Rule, error) {
 			return nil, fmt.Errorf("rules[%d] [%s] error: proxy [%s] not found", idx, line, target)
 		}
 
-		rule = trimArr(rule)
+		//rule = trimArr(rule)
 		params = trimArr(params)
 
-		parsed, parseErr := R.ParseRule(rule[0], payload, target, params)
+		parsed, parseErr := R.ParseRule(ruleName, payload, target, params)
 		if parseErr != nil {
 			return nil, fmt.Errorf("rules[%d] [%s] error: %s", idx, line, parseErr.Error())
 		}
@@ -603,6 +613,7 @@ func parseDNS(cfg RawDNS, hosts *trie.DomainTrie) (*DNS, error) {
 	}
 
 	dnsCfg.FallbackFilter.GeoIP = cfg.FallbackFilter.GeoIP
+	dnsCfg.FallbackFilter.GeoIPCode = cfg.FallbackFilter.GeoIPCode
 	if fallbackip, err := parseFallbackIPCIDR(cfg.FallbackFilter.IPCIDR); err == nil {
 		dnsCfg.FallbackFilter.IPCIDR = fallbackip
 	}

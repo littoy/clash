@@ -5,7 +5,8 @@ import (
 )
 
 type Match struct {
-	adapter string
+	adapter   string
+	ruleExtra *C.RuleExtra
 }
 
 func (f *Match) RuleType() C.RuleType {
@@ -28,12 +29,16 @@ func (f *Match) ShouldResolveIP() bool {
 	return false
 }
 
-func (f *Match) NetWork() C.NetWork {
-	return C.ALLNet
+func (f *Match) RuleExtra() *C.RuleExtra {
+	return f.ruleExtra
 }
 
-func NewMatch(adapter string) *Match {
+func NewMatch(adapter string, ruleExtra *C.RuleExtra) *Match {
+	if ruleExtra.SourceIPs == nil {
+		ruleExtra = nil
+	}
 	return &Match{
-		adapter: adapter,
+		adapter:   adapter,
+		ruleExtra: ruleExtra,
 	}
 }

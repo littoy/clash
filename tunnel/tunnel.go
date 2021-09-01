@@ -33,7 +33,7 @@ var (
 	// default timeout for UDP session
 	udpTimeout = 60 * time.Second
 
-	preProcessCacheFinder, _ = R.NewProcess("", "", C.ALLNet)
+	preProcessCacheFinder, _ = R.NewProcess("", "", nil)
 )
 
 func init() {
@@ -337,12 +337,21 @@ func match(metadata *C.Metadata) (C.Proxy, C.Rule, error) {
 				continue
 			}
 
-			if rule.NetWork() != C.ALLNet && rule.NetWork() != metadata.NetWork {
-				continue
+			extra := rule.RuleExtra()
+			if extra != nil {
+				if extra.NotMatchNetwork(metadata.NetWork) {
+					continue
+				}
+
+				if extra.NotMatchSourceIP(metadata.SrcIP) {
+					continue
+				}
 			}
+
 			return adapter, rule, nil
 		}
 	}
 
-	return proxies["DIRECT"], nil, nil
+	//return proxies["DIRECT"], nil, nil
+	return proxies["REJECT"], nil, nil
 }
