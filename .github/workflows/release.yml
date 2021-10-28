@@ -1,8 +1,4 @@
-<<<<<<< HEAD:.github/workflows/go.yml
-name: Go
-=======
 name: Release
->>>>>>> ebbc9604ce68b6484ab730a05cf02a639e619438:.github/workflows/release.yml
 on: [push]
 jobs:
   build:
@@ -72,5 +68,6 @@ jobs:
         with:
           keep_latest: 1
           delete_tags: true
+          delete_tag_pattern: geo
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
