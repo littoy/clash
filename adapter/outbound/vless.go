@@ -35,7 +35,7 @@ type VlessOption struct {
 	Port           int               `proxy:"port"`
 	UUID           string            `proxy:"uuid"`
 	Flow           string            `proxy:"flow,omitempty"`
-	FlowShow       bool              `proxy:"flow_show,omitempty"`
+	FlowShow       bool              `proxy:"flow-show,omitempty"`
 	TLS            bool              `proxy:"tls,omitempty"`
 	UDP            bool              `proxy:"udp,omitempty"`
 	Network        string            `proxy:"network,omitempty"`
@@ -79,13 +79,21 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 
 		if v.option.TLS {
 			wsOpts.TLS = true
-			wsOpts.SkipCertVerify = v.option.SkipCertVerify
-			wsOpts.ServerName = v.option.ServerName
+			wsOpts.TLSConfig = &tls.Config{
+				ServerName:         host,
+				InsecureSkipVerify: v.option.SkipCertVerify,
+				NextProtos:         []string{"http/1.1"},
+			}
+			if v.option.ServerName != "" {
+				wsOpts.TLSConfig.ServerName = v.option.ServerName
+			} else if host := wsOpts.Headers.Get("Host"); host != "" {
+				wsOpts.TLSConfig.ServerName = host
+			}
 		}
 		c, err = vmess.StreamWebsocketConn(c, wsOpts)
 	case "http":
 		// readability first, so just copy default TLS logic
-		c, err = v.streamTLSConnOrXTLSConn(c, false)
+		c, err = v.streamTLSOrXTLSConn(c, false)
 		if err != nil {
 			return nil, err
 		}
@@ -100,7 +108,7 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 
 		c = vmess.StreamHTTPConn(c, httpOpts)
 	case "h2":
-		c, err = v.streamTLSConnOrXTLSConn(c, true)
+		c, err = v.streamTLSOrXTLSConn(c, true)
 		if err != nil {
 			return nil, err
 		}
@@ -119,7 +127,7 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 		}
 	default:
 		// handle TLS And XTLS
-		c, err = v.streamTLSConnOrXTLSConn(c, true)
+		c, err = v.streamTLSOrXTLSConn(c, true)
 	}
 
 	if err != nil {
@@ -129,7 +137,7 @@ func (v *Vless) StreamConn(c net.Conn, metadata *C.Metadata) (net.Conn, error) {
 	return v.client.StreamConn(c, parseVlessAddr(metadata))
 }
 
-func (v *Vless) streamTLSConnOrXTLSConn(conn net.Conn, isH2 bool) (net.Conn, error) {
+func (v *Vless) streamTLSOrXTLSConn(conn net.Conn, isH2 bool) (net.Conn, error) {
 	host, _, _ := net.SplitHostPort(v.addr)
 
 	if v.isXTLSEnabled() {
