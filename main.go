@@ -48,7 +48,7 @@ func init() {
 func main() {
 	_, _ = maxprocs.Set(maxprocs.Logger(func(string, ...interface{}) {}))
 	if version {
-		fmt.Printf("Clash with GEO site database %s %s %s with %s %s\n", C.Version, runtime.GOOS, runtime.GOARCH, runtime.Version(), C.BuildTime)
+		fmt.Printf("Clash with geo site database %s %s %s with %s %s\n", C.Version, runtime.GOOS, runtime.GOARCH, runtime.Version(), C.BuildTime)
 		return
 	}
 
