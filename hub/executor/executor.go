@@ -108,6 +108,7 @@ func updateExperimental(c *config.Config) {}
 func updateDNS(c *config.DNS) {
 	if !c.Enable {
 		resolver.DefaultResolver = nil
+		resolver.MainResolver = nil
 		resolver.DefaultHostMapper = nil
 		dns.ReCreateServer("", nil, nil)
 		return
@@ -125,12 +126,14 @@ func updateDNS(c *config.DNS) {
 			GeoIPCode: c.FallbackFilter.GeoIPCode,
 			IPCIDR:    c.FallbackFilter.IPCIDR,
 			Domain:    c.FallbackFilter.Domain,
+			GeoSite:   c.FallbackFilter.GeoSite,
 		},
 		Default: c.DefaultNameserver,
 		Policy:  c.NameServerPolicy,
 	}
 
 	r := dns.NewResolver(cfg)
+	mr := dns.NewMainResolver(r)
 	m := dns.NewEnhancer(cfg)
 
 	// reuse cache of old host mapper
@@ -139,6 +142,7 @@ func updateDNS(c *config.DNS) {
 	}
 
 	resolver.DefaultResolver = r
+	resolver.MainResolver = mr
 	resolver.DefaultHostMapper = m
 
 	if err := dns.ReCreateServer(c.Listen, r, m); err != nil {
@@ -168,11 +172,9 @@ func updateGeneral(general *config.General, force bool) {
 	tunnel.SetMode(general.Mode)
 	resolver.DisableIPv6 = !general.IPv6
 
-	if general.Interface != "" {
-		dialer.DefaultOptions = []dialer.Option{dialer.WithInterface(general.Interface)}
-	} else {
-		dialer.DefaultOptions = nil
-	}
+	dialer.DefaultInterface.Store(general.Interface)
+
+	log.Infoln("Use interface name: %s", general.Interface)
 
 	iface.FlushCache()
 

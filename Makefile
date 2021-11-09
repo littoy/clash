@@ -121,4 +121,5 @@ lint:
 	golangci-lint run --disable-all -E govet -E gofumpt -E megacheck ./...
 
 clean:
+	go clean
 	rm -rf $(BINDIR)/*
