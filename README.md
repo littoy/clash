@@ -42,16 +42,46 @@
 Documentations are now moved to [GitHub Wiki](https://github.com/Dreamacro/clash/wiki).
 
 ## Advanced usage for this branch
+### DNS configuration
+Support resolve ip with a proxy tunnel.
+
+Support `geosite` with `fallback-filter`.
+```yaml
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  listen: 127.0.0.1:6868
+  default-nameserver:
+    - 119.29.29.29
+    - 114.114.114.114
+  nameserver:
+    - https://doh.pub/dns-query
+    - tls://223.5.5.5:853
+  fallback:
+    - 'https://1.0.0.1/dns-query#Proxy'  # append the proxy adapter name to the end of DNS URL with '#' prefix.
+    - 'tls://8.8.4.4:853#Proxy'
+  fallback-filter:
+    geoip: false
+    geosite:
+      - gfw  # `geosite` filter only use fallback server to resolve ip, prevent DNS leaks to unsafe DNS providers.
+    domain:
+      - +.example.com
+    ipcidr:
+      - 0.0.0.0/32
+```
+
 ### Rules configuration
 - Support rule `GEOSITE`.
 - Support `multiport` condition for rule `SRC-PORT` and `DST-PORT`.
-- Support not match condition for rule `GEOIP`.
 - Support `network` condition for all rules.
+- Support source IPCIDR condition for all rules, just append to the end.
 
-The `GEOSITE` and `GEOIP` databases via https://github.com/Loyalsoldier/v2ray-rules-dat.
+The `GEOSITE` databases via https://github.com/Loyalsoldier/v2ray-rules-dat.
 ```yaml
 rules:
-  # network condition for rules
+  # network condition for all rules
   - DOMAIN-SUFFIX,bilibili.com,DIRECT,tcp
   - DOMAIN-SUFFIX,bilibili.com,REJECT,udp
     
@@ -75,8 +105,8 @@ rules:
   - GEOIP,private,DIRECT,no-resolve
   - GEOIP,cn,DIRECT
     
-  # Not match condition for rule GEOIP
-  #- GEOIP,!cn,PROXY
+  # source IPCIDR condition for all rules in gateway proxy
+  #- GEOSITE,geolocation-!cn,REJECT,192.168.1.88/32,192.168.1.99/32
 
   - MATCH,PROXY
 ```
@@ -110,58 +140,12 @@ proxies:
     ws-path: /path
     ws-headers:
       Host: example.com
-
-  - name: "vless-h2"
-    type: vless
-    server: server
-    port: 443
-    uuid: uuid
-    network: h2
-    servername: example.com
-    # skip-cert-verify: true
-    h2-opts:
-      host:
-        - http.example.com
-        - http-alt.example.com
-      path: /
-
-  - name: "vless-http"
-    type: vless
-    server: server
-    port: 443
-    uuid: uuid
-    # udp: true
-    network: http
-    servername: example.com
-    # skip-cert-verify: true
-    http-opts:
-      method: "GET"
-      path:
-        - '/'
-        - '/video'
-      headers:
-        Connection:
-          - keep-alive
-
-  - name: vless-grpc
-    server: server
-    port: 443
-    type: vless
-    uuid: uuid
-    network: grpc
-    servername: example.com
-    # skip-cert-verify: true
-    grpc-opts:
-      grpc-service-name: "example"
 ```
 
 ### Display Process name
 Add field `Process` to `Metadata` and prepare to get process name for Restful API `GET /connections`
 
 To display process name in GUI please use https://yaling888.github.io/yacd/
-
-## Premium Release
-[Release](https://github.com/Dreamacro/clash/releases/tag/premium)
 
 ## Development
 If you want to build an application that uses clash as a library, check out the the [GitHub Wiki](https://github.com/Dreamacro/clash/wiki/use-clash-as-a-library)
