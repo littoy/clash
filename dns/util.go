@@ -110,6 +110,24 @@ func msgToIP(msg *D.Msg) []net.IP {
 	return ips
 }
 
+type wrapPacketConn struct {
+	net.PacketConn
+	rAddr net.Addr
+}
+
+func (wpc *wrapPacketConn) Read(b []byte) (n int, err error) {
+	n, _, err = wpc.PacketConn.ReadFrom(b)
+	return n, err
+}
+
+func (wpc *wrapPacketConn) Write(b []byte) (n int, err error) {
+	return wpc.PacketConn.WriteTo(b, wpc.rAddr)
+}
+
+func (wpc *wrapPacketConn) RemoteAddr() net.Addr {
+	return wpc.rAddr
+}
+
 func dialContextWithProxyAdapter(ctx context.Context, adapterName string, network string, dstIP net.IP, port string) (net.Conn, error) {
 	adapter, ok := tunnel.Proxies()[adapterName]
 	if !ok {
@@ -135,6 +153,18 @@ func dialContextWithProxyAdapter(ctx context.Context, adapterName string, networ
 		Host:     "",
 		DstIP:    dstIP,
 		DstPort:  port,
+	}
+
+	if networkType == C.UDP {
+		packetConn, err := adapter.ListenPacketContext(ctx, metadata)
+		if err != nil {
+			return nil, err
+		}
+
+		return &wrapPacketConn{
+			PacketConn: packetConn,
+			rAddr:      metadata.UDPAddr(),
+		}, nil
 	}
 
 	return adapter.DialContext(ctx, metadata)
