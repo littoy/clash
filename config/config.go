@@ -503,8 +503,9 @@ func parseNameServer(servers []string) ([]dns.NameServer, error) {
 		nameservers = append(
 			nameservers,
 			dns.NameServer{
-				Net:  dnsNetType,
-				Addr: addr,
+				Net:          dnsNetType,
+				Addr:         addr,
+				ProxyAdapter: u.Fragment,
 			},
 		)
 	}

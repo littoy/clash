@@ -302,9 +302,10 @@ func (r *Resolver) asyncExchange(ctx context.Context, client []dnsClient, msg *D
 }
 
 type NameServer struct {
-	Net       string
-	Addr      string
-	Interface string
+	Net          string
+	Addr         string
+	Interface    string
+	ProxyAdapter string
 }
 
 type FallbackFilter struct {
