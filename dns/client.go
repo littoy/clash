@@ -48,15 +48,16 @@ func (c *client) ExchangeContext(ctx context.Context, m *D.Msg) (*D.Msg, error) 
 		network = "tcp"
 	}
 
+	options := []dialer.Option{}
+	if c.iface != "" {
+		options = append(options, dialer.WithInterface(c.iface))
+	}
+
 	var conn net.Conn
-	if c.proxyAdapter != "" && network == "tcp" {
-		conn, err = dialContextWithProxyAdapter(ctx, c.proxyAdapter, ip, c.port)
+	if c.proxyAdapter == "" {
+		conn, err = dialer.DialContext(ctx, network, net.JoinHostPort(ip.String(), c.port), options...)
 	} else {
-		options := []dialer.Option{}
-		if c.iface != "" {
-			options = append(options, dialer.WithInterface(c.iface))
-		}
-		conn, err = dialer.DialContext(ctx, network, net.JoinHostPort(c.host, c.port), options...)
+		conn, err = dialContextWithProxyAdapter(ctx, c.proxyAdapter, network, ip, c.port, options...)
 	}
 
 	if err != nil {
