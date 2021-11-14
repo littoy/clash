@@ -168,7 +168,6 @@ func updateRules(rules []C.Rule) {
 }
 
 func updateGeneral(general *config.General, force bool) {
-	log.SetLevel(general.LogLevel)
 	tunnel.SetMode(general.Mode)
 	resolver.DisableIPv6 = !general.IPv6
 
@@ -210,6 +209,8 @@ func updateGeneral(general *config.General, force bool) {
 	if err := P.ReCreateMixed(general.MixedPort, tcpIn, udpIn); err != nil {
 		log.Errorln("Start Mixed(http and socks) server error: %s", err.Error())
 	}
+
+	log.SetLevel(general.LogLevel)
 }
 
 func updateUsers(users []auth.AuthUser) {
