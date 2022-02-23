@@ -123,23 +123,10 @@ proxies:
     port: 443
     uuid: uuid
     network: tcp
-    servername: example.com # AKA SNI
+    servername: example.com
     # udp: true
     # flow: xtls-rprx-direct # xtls-rprx-origin  # enable XTLS
     # skip-cert-verify: true
-    
-  - name: "vless-ws"
-    type: vless
-    server: server
-    port: 443
-    uuid: uuid
-    udp: true
-    network: ws
-    servername: example.com # priority over wss host
-    # skip-cert-verify: true
-    ws-path: /path
-    ws-headers:
-      Host: example.com
 ```
 
 ### Display Process name
