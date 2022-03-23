@@ -50,6 +50,10 @@ func (gs *GEOSITE) GetDomainMatcher() *router.DomainMatcher {
 	return gs.matcher
 }
 
+func (gs *GEOSITE) ShouldFindProcess() bool {
+	return false
+}
+
 func NewGEOSITE(country string, adapter string, ruleExtra *C.RuleExtra) (*GEOSITE, error) {
 	matcher, recordsCount, err := geodata.LoadGeoSiteMatcher(country)
 	if err != nil {

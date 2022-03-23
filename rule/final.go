@@ -33,6 +33,10 @@ func (f *Match) RuleExtra() *C.RuleExtra {
 	return f.ruleExtra
 }
 
+func (f *Match) ShouldFindProcess() bool {
+	return false
+}
+
 func NewMatch(adapter string, ruleExtra *C.RuleExtra) *Match {
 	if ruleExtra.SourceIPs == nil {
 		ruleExtra = nil

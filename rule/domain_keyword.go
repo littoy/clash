@@ -40,6 +40,10 @@ func (dk *DomainKeyword) RuleExtra() *C.RuleExtra {
 	return dk.ruleExtra
 }
 
+func (dk *DomainKeyword) ShouldFindProcess() bool {
+	return false
+}
+
 func NewDomainKeyword(keyword string, adapter string, ruleExtra *C.RuleExtra) *DomainKeyword {
 	return &DomainKeyword{
 		keyword:   strings.ToLower(keyword),

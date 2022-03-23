@@ -51,6 +51,10 @@ func (p *Port) RuleExtra() *C.RuleExtra {
 	return p.ruleExtra
 }
 
+func (p *Port) ShouldFindProcess() bool {
+	return false
+}
+
 func (p *Port) matchPortReal(portRef string) bool {
 	port, err := strconv.Atoi(portRef)
 	if err != nil {
