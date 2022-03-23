@@ -8,10 +8,10 @@ import (
 )
 
 type GEOIP struct {
+	*Base
 	country     string
 	adapter     string
 	noResolveIP bool
-	ruleExtra   *C.RuleExtra
 }
 
 func (g *GEOIP) RuleType() C.RuleType {
@@ -29,7 +29,7 @@ func (g *GEOIP) Match(metadata *C.Metadata) bool {
 			ip.IsUnspecified() ||
 			ip.IsLoopback() ||
 			ip.IsMulticast() ||
-			C.TunBroadcastAddr.Equal(ip)
+			ip.IsLinkLocalUnicast()
 	}
 
 	record, _ := mmdb.Instance().Country(ip)
@@ -48,25 +48,19 @@ func (g *GEOIP) ShouldResolveIP() bool {
 	return !g.noResolveIP
 }
 
-func (g *GEOIP) RuleExtra() *C.RuleExtra {
-	return g.ruleExtra
-}
-
 func (g *GEOIP) GetCountry() string {
 	return g.country
 }
 
-func (g *GEOIP) ShouldFindProcess() bool {
-	return false
-}
-
-func NewGEOIP(country string, adapter string, noResolveIP bool, ruleExtra *C.RuleExtra) (*GEOIP, error) {
+func NewGEOIP(country string, adapter string, noResolveIP bool) *GEOIP {
 	geoip := &GEOIP{
+		Base:        &Base{},
 		country:     country,
 		adapter:     adapter,
 		noResolveIP: noResolveIP,
-		ruleExtra:   ruleExtra,
 	}
 
-	return geoip, nil
+	return geoip
 }
+
+var _ C.Rule = (*GEOIP)(nil)

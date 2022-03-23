@@ -56,5 +56,6 @@ type Rule interface {
 	Payload() string
 	ShouldResolveIP() bool
 	RuleExtra() *RuleExtra
+	SetRuleExtra(re *RuleExtra)
 	ShouldFindProcess() bool
 }

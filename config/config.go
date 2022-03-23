@@ -388,8 +388,10 @@ func parseProxies(cfg *RawConfig) (proxies map[string]C.Proxy, providersMap map[
 }
 
 func parseRules(cfg *RawConfig, proxies map[string]C.Proxy) ([]C.Rule, error) {
-	rules := []C.Rule{}
-	rulesConfig := cfg.Rule
+	var (
+		rules       []C.Rule
+		rulesConfig = cfg.Rule
+	)
 
 	// parse rules
 	for idx, line := range rulesConfig {
@@ -397,7 +399,7 @@ func parseRules(cfg *RawConfig, proxies map[string]C.Proxy) ([]C.Rule, error) {
 		var (
 			payload  string
 			target   string
-			params   = []string{}
+			params   []string
 			ruleName = strings.ToUpper(rule[0])
 		)
 
@@ -406,25 +408,27 @@ func parseRules(cfg *RawConfig, proxies map[string]C.Proxy) ([]C.Rule, error) {
 			continue
 		}
 
-		switch l := len(rule); {
-		case l == 2:
-			target = rule[1]
-		case l == 3:
-			if ruleName == "MATCH" {
-				payload = ""
-				target = rule[1]
-				params = rule[2:]
-				break
-			}
-			payload = rule[1]
-			target = rule[2]
-		case l >= 4:
-			payload = rule[1]
-			target = rule[2]
-			params = rule[3:]
-		default:
+		l := len(rule)
+
+		if l < 2 {
 			return nil, fmt.Errorf("rules[%d] [%s] error: format invalid", idx, line)
 		}
+
+		if l < 4 {
+			rule = append(rule, make([]string, 4-l)...)
+		}
+
+		if ruleName == "MATCH" {
+			l = 2
+		}
+
+		if l >= 3 {
+			l = 3
+			payload = rule[1]
+		}
+
+		target = rule[l-1]
+		params = rule[l:]
 
 		if _, ok := proxies[target]; !ok {
 			return nil, fmt.Errorf("rules[%d] [%s] error: proxy [%s] not found", idx, line, target)
