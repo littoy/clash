@@ -46,6 +46,8 @@ Documentations are now moved to [GitHub Wiki](https://github.com/Dreamacro/clash
 Support resolve ip with a proxy tunnel.
 
 Support `geosite` with `fallback-filter`.
+
+Use `curl -X POST controllerip:port/cache/fakeip/flush` to flush persistence fakeip
 ```yaml
 dns:
   enable: true
@@ -101,9 +103,7 @@ rules:
   - GEOSITE,facebook,PROXY
   - GEOSITE,youtube,PROXY
   - GEOSITE,geolocation-cn,DIRECT
-  - GEOSITE,gfw,PROXY
-  - GEOSITE,greatfire,PROXY
-  #- GEOSITE,geolocation-!cn,PROXY
+  - GEOSITE,geolocation-!cn,PROXY
   
   # source IPCIDR condition for all rules in gateway proxy
   #- GEOSITE,gfw,REJECT,192.168.1.88/32,192.168.1.99/32

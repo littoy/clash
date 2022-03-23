@@ -40,7 +40,19 @@ func (h *ResolverEnhancer) IsFakeIP(ip net.IP) bool {
 	}
 
 	if pool := h.fakePool; pool != nil {
-		return pool.IPNet().Contains(ip) && !pool.Gateway().Equal(ip)
+		return pool.IPNet().Contains(ip) && !pool.Gateway().Equal(ip) && !pool.Broadcast().Equal(ip)
+	}
+
+	return false
+}
+
+func (h *ResolverEnhancer) IsFakeBroadcastIP(ip net.IP) bool {
+	if !h.FakeIPEnabled() {
+		return false
+	}
+
+	if pool := h.fakePool; pool != nil {
+		return pool.Broadcast().Equal(ip)
 	}
 
 	return false
@@ -70,6 +82,13 @@ func (h *ResolverEnhancer) PatchFrom(o *ResolverEnhancer) {
 	if h.fakePool != nil && o.fakePool != nil {
 		h.fakePool.CloneFrom(o.fakePool)
 	}
+}
+
+func (h *ResolverEnhancer) FlushFakeIP() error {
+	if h.fakePool != nil {
+		return h.fakePool.FlushFakeIP()
+	}
+	return nil
 }
 
 func NewEnhancer(cfg Config) *ResolverEnhancer {

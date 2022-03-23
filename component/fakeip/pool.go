@@ -18,18 +18,20 @@ type store interface {
 	DelByIP(ip net.IP)
 	Exist(ip net.IP) bool
 	CloneTo(store)
+	FlushFakeIP() error
 }
 
 // Pool is a implementation about fake ip generator without storage
 type Pool struct {
-	max     uint32
-	min     uint32
-	gateway uint32
-	offset  uint32
-	mux     sync.Mutex
-	host    *trie.DomainTrie
-	ipnet   *net.IPNet
-	store   store
+	max       uint32
+	min       uint32
+	gateway   uint32
+	broadcast uint32
+	offset    uint32
+	mux       sync.Mutex
+	host      *trie.DomainTrie
+	ipnet     *net.IPNet
+	store     store
 }
 
 // Lookup return a fake ip with host
@@ -82,6 +84,11 @@ func (p *Pool) Gateway() net.IP {
 	return uintToIP(p.gateway)
 }
 
+// Broadcast return broadcast ip
+func (p *Pool) Broadcast() net.IP {
+	return uintToIP(p.broadcast)
+}
+
 // IPNet return raw ipnet
 func (p *Pool) IPNet() *net.IPNet {
 	return p.ipnet
@@ -90,6 +97,11 @@ func (p *Pool) IPNet() *net.IPNet {
 // CloneFrom clone cache from old pool
 func (p *Pool) CloneFrom(o *Pool) {
 	o.store.CloneTo(p.store)
+}
+
+// FlushFakeIP clear pool cache including persistence file
+func (p *Pool) FlushFakeIP() error {
+	return p.store.FlushFakeIP()
 }
 
 func (p *Pool) get(host string) net.IP {
@@ -141,10 +153,10 @@ type Options struct {
 
 // New return Pool instance
 func New(options Options) (*Pool, error) {
-	min := ipToUint(options.IPNet.IP) + 2
+	min := ipToUint(options.IPNet.IP) + 3
 
 	ones, bits := options.IPNet.Mask.Size()
-	total := 1<<uint(bits-ones) - 2
+	total := 1<<uint(bits-ones) - 4
 
 	if total <= 0 {
 		return nil, errors.New("ipnet don't have valid ip")
@@ -152,11 +164,12 @@ func New(options Options) (*Pool, error) {
 
 	max := min + uint32(total) - 1
 	pool := &Pool{
-		min:     min,
-		max:     max,
-		gateway: min - 1,
-		host:    options.Host,
-		ipnet:   options.IPNet,
+		min:       min,
+		max:       max,
+		gateway:   min - 2,
+		broadcast: max + 1,
+		host:      options.Host,
+		ipnet:     options.IPNet,
 	}
 	if options.Persistence {
 		pool.store = &cachefileStore{
