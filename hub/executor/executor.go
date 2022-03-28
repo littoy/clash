@@ -108,7 +108,7 @@ func updateExperimental(c *config.Config) {}
 func updateDNS(c *config.DNS) {
 	if !c.Enable {
 		resolver.DefaultResolver = nil
-		resolver.MainResolver = nil
+		resolver.ProxyServerHostResolver = nil
 		resolver.DefaultHostMapper = nil
 		dns.ReCreateServer("", nil, nil)
 		return
@@ -128,12 +128,13 @@ func updateDNS(c *config.DNS) {
 			Domain:    c.FallbackFilter.Domain,
 			GeoSite:   c.FallbackFilter.GeoSite,
 		},
-		Default: c.DefaultNameserver,
-		Policy:  c.NameServerPolicy,
+		Default:     c.DefaultNameserver,
+		Policy:      c.NameServerPolicy,
+		ProxyServer: c.ProxyServerNameserver,
 	}
 
 	r := dns.NewResolver(cfg)
-	mr := dns.NewMainResolver(r)
+	pr := dns.NewProxyServerHostResolver(r)
 	m := dns.NewEnhancer(cfg)
 
 	// reuse cache of old host mapper
@@ -142,8 +143,11 @@ func updateDNS(c *config.DNS) {
 	}
 
 	resolver.DefaultResolver = r
-	resolver.MainResolver = mr
 	resolver.DefaultHostMapper = m
+
+	if pr.HasProxyServer() {
+		resolver.ProxyServerHostResolver = pr
+	}
 
 	dns.ReCreateServer(c.Listen, r, m)
 }

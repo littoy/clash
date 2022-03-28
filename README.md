@@ -58,6 +58,8 @@ dns:
   default-nameserver:
     - 119.29.29.29
     - 114.114.114.114
+  proxy-server-nameserver: # resolve ip to proxies server host only, it's optional
+    - tls://223.6.6.6:853
   nameserver:
     - https://doh.pub/dns-query
     - tls://223.5.5.5:853
