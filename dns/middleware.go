@@ -20,7 +20,7 @@ type (
 	middleware func(next handler) handler
 )
 
-func withHosts(hosts *trie.DomainTrie) middleware {
+func withHosts(hosts *trie.DomainTrie, mapping *cache.LruCache) middleware {
 	return func(next handler) handler {
 		return func(ctx *context.DNSContext, r *D.Msg) (*D.Msg, error) {
 			q := r.Question[0]
@@ -29,7 +29,9 @@ func withHosts(hosts *trie.DomainTrie) middleware {
 				return next(ctx, r)
 			}
 
-			record := hosts.Search(strings.TrimRight(q.Name, "."))
+			host := strings.TrimRight(q.Name, ".")
+
+			record := hosts.Search(host)
 			if record == nil {
 				return next(ctx, r)
 			}
@@ -51,6 +53,10 @@ func withHosts(hosts *trie.DomainTrie) middleware {
 				msg.Answer = []D.RR{rr}
 			} else {
 				return next(ctx, r)
+			}
+
+			if mapping != nil {
+				mapping.SetWithExpire(ip.String(), host, time.Now().Add(time.Second*time.Duration(dnsDefaultTTL)))
 			}
 
 			ctx.SetType(context.DNSTypeHost)
@@ -176,7 +182,7 @@ func newHandler(resolver *Resolver, mapper *ResolverEnhancer) handler {
 	middlewares := []middleware{}
 
 	if resolver.hosts != nil {
-		middlewares = append(middlewares, withHosts(resolver.hosts))
+		middlewares = append(middlewares, withHosts(resolver.hosts, mapper.mapping))
 	}
 
 	if mapper.mode == C.DNSFakeIP {
