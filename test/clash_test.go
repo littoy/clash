@@ -248,7 +248,7 @@ func testPingPongWithSocksPort(t *testing.T, port int) {
 	test(t)
 }
 
-func testPingPongWithConn(t *testing.T, c net.Conn) error {
+func testPingPongWithConn(t *testing.T, cc func() net.Conn) error {
 	l, err := Listen("tcp", ":10001")
 	if err != nil {
 		return err
@@ -273,6 +273,9 @@ func testPingPongWithConn(t *testing.T, c net.Conn) error {
 		}
 	}()
 
+	c := cc()
+	defer c.Close()
+
 	go func() {
 		if _, err := c.Write([]byte("ping")); err != nil {
 			return
@@ -280,6 +283,7 @@ func testPingPongWithConn(t *testing.T, c net.Conn) error {
 
 		buf := make([]byte, 4)
 		if _, err := io.ReadFull(c, buf); err != nil {
+			t.Error(err)
 			return
 		}
 
@@ -332,7 +336,7 @@ type hashPair struct {
 	recvHash map[int][]byte
 }
 
-func testLargeDataWithConn(t *testing.T, c net.Conn) error {
+func testLargeDataWithConn(t *testing.T, cc func() net.Conn) error {
 	l, err := Listen("tcp", ":10001")
 	require.NoError(t, err)
 	defer l.Close()
@@ -393,6 +397,9 @@ func testLargeDataWithConn(t *testing.T, c net.Conn) error {
 			recvHash: hashMap,
 		}
 	}()
+
+	c := cc()
+	defer c.Close()
 
 	go func() {
 		sendHash, err := writeRandData(c)
@@ -540,23 +547,25 @@ func testPacketConnTimeout(t *testing.T, pc net.PacketConn) error {
 }
 
 func testSuit(t *testing.T, proxy C.ProxyAdapter) {
-	conn, err := proxy.DialContext(context.Background(), &C.Metadata{
-		Host:     localIP.String(),
-		DstPort:  "10001",
-		AddrType: socks5.AtypDomainName,
-	})
-	require.NoError(t, err)
-	defer conn.Close()
-	assert.NoError(t, testPingPongWithConn(t, conn))
+	assert.NoError(t, testPingPongWithConn(t, func() net.Conn {
+		conn, err := proxy.DialContext(context.Background(), &C.Metadata{
+			Host:     localIP.String(),
+			DstPort:  "10001",
+			AddrType: socks5.AtypDomainName,
+		})
+		require.NoError(t, err)
+		return conn
+	}))
 
-	conn, err = proxy.DialContext(context.Background(), &C.Metadata{
-		Host:     localIP.String(),
-		DstPort:  "10001",
-		AddrType: socks5.AtypDomainName,
-	})
-	require.NoError(t, err)
-	defer conn.Close()
-	assert.NoError(t, testLargeDataWithConn(t, conn))
+	assert.NoError(t, testLargeDataWithConn(t, func() net.Conn {
+		conn, err := proxy.DialContext(context.Background(), &C.Metadata{
+			Host:     localIP.String(),
+			DstPort:  "10001",
+			AddrType: socks5.AtypDomainName,
+		})
+		require.NoError(t, err)
+		return conn
+	}))
 
 	if !proxy.SupportUDP() {
 		return
