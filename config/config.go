@@ -21,7 +21,6 @@ import (
 	"github.com/Dreamacro/clash/log"
 	R "github.com/Dreamacro/clash/rule"
 	T "github.com/Dreamacro/clash/tunnel"
-
 	"gopkg.in/yaml.v3"
 )
 

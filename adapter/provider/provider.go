@@ -11,7 +11,6 @@ import (
 	"github.com/Dreamacro/clash/adapter"
 	C "github.com/Dreamacro/clash/constant"
 	types "github.com/Dreamacro/clash/constant/provider"
-
 	"gopkg.in/yaml.v3"
 )
 

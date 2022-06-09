@@ -15,7 +15,6 @@ import (
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/transport/gun"
 	"github.com/Dreamacro/clash/transport/vmess"
-
 	"golang.org/x/net/http2"
 )
 

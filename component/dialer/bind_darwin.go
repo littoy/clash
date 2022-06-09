@@ -5,7 +5,6 @@ import (
 	"syscall"
 
 	"github.com/Dreamacro/clash/component/iface"
-
 	"golang.org/x/sys/unix"
 )
 

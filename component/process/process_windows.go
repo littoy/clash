@@ -8,7 +8,6 @@ import (
 	"unsafe"
 
 	"github.com/Dreamacro/clash/log"
-
 	"golang.org/x/sys/windows"
 )
 

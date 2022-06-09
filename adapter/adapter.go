@@ -12,7 +12,6 @@ import (
 	"github.com/Dreamacro/clash/common/queue"
 	"github.com/Dreamacro/clash/component/dialer"
 	C "github.com/Dreamacro/clash/constant"
-
 	"go.uber.org/atomic"
 )
 

@@ -13,7 +13,6 @@ import (
 	"github.com/Dreamacro/clash/component/dialer"
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/constant/provider"
-
 	"golang.org/x/net/publicsuffix"
 )
 

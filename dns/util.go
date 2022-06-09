@@ -7,7 +7,6 @@ import (
 
 	"github.com/Dreamacro/clash/common/cache"
 	"github.com/Dreamacro/clash/log"
-
 	D "github.com/miekg/dns"
 )
 

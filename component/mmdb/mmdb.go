@@ -5,7 +5,6 @@ import (
 
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/log"
-
 	"github.com/oschwald/geoip2-golang"
 )
 

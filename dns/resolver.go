@@ -15,7 +15,6 @@ import (
 	"github.com/Dreamacro/clash/component/resolver"
 	"github.com/Dreamacro/clash/component/trie"
 	C "github.com/Dreamacro/clash/constant"
-
 	D "github.com/miekg/dns"
 	"golang.org/x/sync/singleflight"
 )
